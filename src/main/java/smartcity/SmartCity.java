@@ -1,15 +1,19 @@
 package smartcity;
 
+import administrator.beans.TaxisListBean;
+
 public class SmartCity {
 
-    private final Cell[][] grid;
+    public static final int SIZE = 10;
+
+    private final Cell[][] grid = new Cell[SIZE][];
+    private final TaxisListBean taxis = TaxisListBean.getInstance();
 
     private static SmartCity instance;
 
     private SmartCity() {
-        grid = new Cell[10][];
         for (Cell[] row : grid)
-            row = new Cell[10];
+            row = new Cell[SIZE];
     }
 
     public synchronized static SmartCity getInstance() {
