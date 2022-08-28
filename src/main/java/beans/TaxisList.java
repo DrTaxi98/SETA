@@ -1,4 +1,4 @@
-package administrator.beans;
+package beans;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,20 +10,20 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
-public class TaxisListBean {
+public class TaxisList {
 
     @XmlElement
     private List<TaxiBean> taxisList;
 
-    private static TaxisListBean instance;
+    private static TaxisList instance;
 
-    private TaxisListBean() {
+    private TaxisList() {
         taxisList = new ArrayList<>();
     }
 
-    public synchronized static TaxisListBean getInstance() {
+    public synchronized static TaxisList getInstance() {
         if (instance == null)
-            instance = new TaxisListBean();
+            instance = new TaxisList();
         return instance;
     }
 
@@ -35,15 +35,11 @@ public class TaxisListBean {
         this.taxisList = taxisList;
     }
 
-    public synchronized void add(TaxiBean taxi) {
-        taxisList.add(taxi);
+    public synchronized boolean add(TaxiBean taxi) {
+        return taxisList.add(taxi);
     }
 
-    public TaxiBean get(int id) {
-        List<TaxiBean> taxisListCopy = getTaxisList();
-        for (TaxiBean taxi : taxisListCopy)
-            if (taxi.getId() == id)
-                return taxi;
-        return null;
+    public synchronized boolean remove(int id) {
+        return taxisList.removeIf(taxi -> taxi.getId() == id);
     }
 }

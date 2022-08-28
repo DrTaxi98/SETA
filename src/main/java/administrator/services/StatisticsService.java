@@ -1,6 +1,6 @@
 package administrator.services;
 
-import administrator.beans.StatisticsBean;
+import beans.AverageStatistics;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -12,7 +12,7 @@ public class StatisticsService {
     @GET
     @Produces({"application/json", "application/xml"})
     public Response getAverage(@PathParam("id") String id, @QueryParam("n") int n) {
-        StatisticsBean stats = null;
+        AverageStatistics stats = null;
         if (stats != null)
             return Response.ok(stats).build();
         else
@@ -22,8 +22,8 @@ public class StatisticsService {
     @Path("average")
     @GET
     @Produces({"application/json", "application/xml"})
-    public Response getAverage(@QueryParam("t1") int t1, @QueryParam("t2") int t2) {
-        StatisticsBean stats = null;
+    public Response getAverage(@QueryParam("t1") long t1, @QueryParam("t2") long t2) {
+        AverageStatistics stats = null;
         return Response.ok(stats).build();
     }
 }

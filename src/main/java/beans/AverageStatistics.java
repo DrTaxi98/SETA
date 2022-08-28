@@ -1,18 +1,18 @@
-package administrator.beans;
+package beans;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class StatisticsBean {
+public class AverageStatistics {
 
     private int travelledKms;
     private int batteryLevel;
     private double pollutionLevel;
     private int accomplishedRides;
 
-    public StatisticsBean() {}
+    public AverageStatistics() {}
 
-    public StatisticsBean(int travelledKms, int batteryLevel, double pollutionLevel, int accomplishedRides) {
+    public AverageStatistics(int travelledKms, int batteryLevel, double pollutionLevel, int accomplishedRides) {
         this.travelledKms = travelledKms;
         this.batteryLevel = batteryLevel;
         this.pollutionLevel = pollutionLevel;
