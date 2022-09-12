@@ -9,7 +9,7 @@ import java.util.Random;
 public class SmartCityUtils {
 
     private static final int SIZE = 10;
-    private static final int DISCRICTS = 4;
+    private static final int DISTRICTS = 4;
     private static final int DISTRICT_SIZE = SIZE / 2;
     private static final List<Position> rechargingStations =
             Arrays.asList(
@@ -21,9 +21,16 @@ public class SmartCityUtils {
 
     private static final Random random = new Random();
 
+    private static int randomDistrict() {
+        return random.nextInt(DISTRICTS) + 1;
+    }
+
     public static int getDistrict(Position position) {
         int x = position.getX();
         int y = position.getY();
+
+        if (x < 0 || x >= SIZE || y < 0 || y >= SIZE)
+            throw new RuntimeException();
 
         if (x < DISTRICT_SIZE)
             if (y < DISTRICT_SIZE)
@@ -36,11 +43,11 @@ public class SmartCityUtils {
             return 3;
     }
 
-    public static int randomDistrict() {
-        return random.nextInt(DISCRICTS) + 1;
-    }
-
     public static Position getRechargingStation(int district) {
         return rechargingStations.get(district - 1);
+    }
+
+    public static Position getStartPosition() {
+        return getRechargingStation(randomDistrict());
     }
 }

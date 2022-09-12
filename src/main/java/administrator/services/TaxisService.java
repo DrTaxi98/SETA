@@ -1,9 +1,8 @@
 package administrator.services;
 
-import beans.AverageStatistics;
 import beans.TaxiBean;
 import beans.TaxiStartInfo;
-import beans.TaxisList;
+import beans.TaxisSet;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -13,9 +12,8 @@ public class TaxisService {
 
     @GET
     @Produces({"application/json", "application/xml"})
-    public Response getTaxisList() {
-        TaxisList taxis = TaxisList.getInstance();
-        return Response.ok(taxis).build();
+    public Response getTaxis() {
+        return Response.ok(TaxisSet.getInstance()).build();
     }
 
     @Path("add")
@@ -23,22 +21,19 @@ public class TaxisService {
     @Consumes({"application/json", "application/xml"})
     @Produces({"application/json", "application/xml"})
     public Response addTaxi(TaxiBean taxi) {
-        TaxisList.getInstance().add(taxi);
-        TaxiStartInfo taxiStartInfo = new TaxiStartInfo();
-        return Response.ok(taxiStartInfo).build();
+        TaxiStartInfo taxiStartInfo = TaxisSet.getInstance().add(taxi);
+        if (taxiStartInfo != null)
+            return Response.ok(taxiStartInfo).build();
+        else
+            return Response.status(Response.Status.CONFLICT).build();
     }
 
     @Path("{id}/remove")
     @DELETE
     public Response removeTaxi(@PathParam("id") int id) {
-        TaxisList.getInstance().remove(id);
-        return Response.ok().build();
-    }
-
-    @Path("{id}/statistics")
-    @POST
-    @Consumes({"application/json", "application/xml"})
-    public Response receiveStatistics(@PathParam("id") int id, AverageStatistics stats) {
-        return Response.ok().build();
+        if (TaxisSet.getInstance().remove(id))
+            return Response.ok().build();
+        else
+            return Response.status(Response.Status.NOT_FOUND).build();
     }
 }

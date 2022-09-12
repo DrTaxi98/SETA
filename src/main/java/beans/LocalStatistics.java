@@ -2,22 +2,23 @@ package beans;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
+import java.util.OptionalDouble;
 
 @XmlRootElement
-public class LocalStatistics {
+public class LocalStatistics implements Comparable<LocalStatistics> {
 
     private int taxiId;
     private long timestamp;
     private int batteryLevel;
 
-    private int travelledKms;
+    private double travelledKms;
     private int accomplishedRides;
     private List<Double> pollutionAverages;
 
     public LocalStatistics() {}
 
     public LocalStatistics(int taxiId, long timestamp, int batteryLevel,
-                           int travelledKms, int accomplishedRides, List<Double> pollutionAverages) {
+                           double travelledKms, int accomplishedRides, List<Double> pollutionAverages) {
         this.taxiId = taxiId;
         this.timestamp = timestamp;
         this.batteryLevel = batteryLevel;
@@ -50,11 +51,11 @@ public class LocalStatistics {
         this.batteryLevel = batteryLevel;
     }
 
-    public int getTravelledKms() {
+    public double getTravelledKms() {
         return travelledKms;
     }
 
-    public void setTravelledKms(int travelledKms) {
+    public void setTravelledKms(double travelledKms) {
         this.travelledKms = travelledKms;
     }
 
@@ -72,5 +73,16 @@ public class LocalStatistics {
 
     public void setPollutionAverages(List<Double> pollutionAverages) {
         this.pollutionAverages = pollutionAverages;
+    }
+
+    public OptionalDouble computePollutionAverage() {
+        return pollutionAverages.stream()
+                .mapToDouble(Double::doubleValue)
+                .average();
+    }
+
+    @Override
+    public int compareTo(LocalStatistics o) {
+        return Long.compare(timestamp, o.timestamp);
     }
 }

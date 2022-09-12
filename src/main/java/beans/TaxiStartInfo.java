@@ -1,39 +1,35 @@
 package beans;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
+import java.util.Set;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 public class TaxiStartInfo {
 
-    @XmlElement
-    private Position startingPosition;
-    @XmlElement
-    private TaxisList taxisList;
+    private Position startPosition;
+    private Set<TaxiBean> otherTaxis;
 
     public TaxiStartInfo() {}
 
-    public TaxiStartInfo(Position startingPosition, TaxisList taxisList) {
-        this.startingPosition = startingPosition;
-        this.taxisList = taxisList;
+    public TaxiStartInfo(Position startPosition, Set<TaxiBean> otherTaxis) {
+        this.startPosition = startPosition;
+        this.otherTaxis = otherTaxis;
     }
 
-    public Position getStartingPosition() {
-        return startingPosition;
+    public Position getStartPosition() {
+        return startPosition;
     }
 
-    public void setStartingPosition(Position startingPosition) {
-        this.startingPosition = startingPosition;
+    public void setStartPosition(Position startPosition) {
+        this.startPosition = startPosition;
     }
 
-    public TaxisList getTaxisList() {
-        return taxisList;
+    public Set<TaxiBean> getOtherTaxis() {
+        return otherTaxis;
     }
 
-    public void setTaxisList(TaxisList taxisList) {
-        this.taxisList = taxisList;
+    public void setOtherTaxis(Set<TaxiBean> otherTaxis) {
+        this.otherTaxis = otherTaxis;
     }
 }

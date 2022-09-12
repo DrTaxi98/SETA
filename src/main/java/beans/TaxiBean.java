@@ -1,8 +1,9 @@
 package beans;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Objects;
 
-@XmlRootElement
+@XmlRootElement(name = "Taxi")
 public class TaxiBean {
 
     private int id;
@@ -39,5 +40,18 @@ public class TaxiBean {
 
     public void setPortNumber(int portNumber) {
         this.portNumber = portNumber;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TaxiBean taxiBean = (TaxiBean) o;
+        return id == taxiBean.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
