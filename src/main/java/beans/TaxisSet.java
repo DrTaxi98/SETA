@@ -1,6 +1,5 @@
 package beans;
 
-import administrator.model.StatisticsMap;
 import utils.SmartCityUtils;
 
 import java.util.LinkedHashSet;
@@ -39,7 +38,6 @@ public class TaxisSet {
     public synchronized TaxiStartInfo add(TaxiBean taxi) {
         Set<TaxiBean> otherTaxis = getTaxis();
         if (taxis.add(taxi)) {
-            StatisticsMap.getInstance().addEntry(taxi.getId());
             Position startPosition = SmartCityUtils.getStartPosition();
             return new TaxiStartInfo(startPosition, otherTaxis);
         }

@@ -1,7 +1,8 @@
 package beans;
 
-import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Objects;
+
+import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "Taxi")
 public class TaxiBean {

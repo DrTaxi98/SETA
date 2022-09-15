@@ -1,8 +1,10 @@
 package beans;
 
-import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
+import java.util.Objects;
 import java.util.OptionalDouble;
+
+import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class LocalStatistics implements Comparable<LocalStatistics> {
@@ -82,7 +84,23 @@ public class LocalStatistics implements Comparable<LocalStatistics> {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        LocalStatistics that = (LocalStatistics) o;
+        return taxiId == that.taxiId && timestamp == that.timestamp;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(taxiId, timestamp);
+    }
+
+    @Override
     public int compareTo(LocalStatistics o) {
-        return Long.compare(timestamp, o.timestamp);
+        int compareTimestamp = Long.compare(timestamp, o.timestamp);
+        if (compareTimestamp != 0)
+            return compareTimestamp;
+        return Integer.compare(taxiId, o.taxiId);
     }
 }

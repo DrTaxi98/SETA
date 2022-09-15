@@ -3,7 +3,6 @@ package administrator.server;
 import com.sun.jersey.api.container.httpserver.HttpServerFactory;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
-import java.util.Scanner;
 
 public class AdministratorServer {
 
@@ -17,9 +16,8 @@ public class AdministratorServer {
         System.out.println("Server started on: http://" + HOST + ":" + PORT);
         System.out.println("Server running!");
 
-        Scanner scanner = new Scanner(System.in);
         System.out.println("Hit return to stop...");
-        scanner.nextLine();
+        System.in.read();
         System.out.println("Stopping server...");
         server.stop(0);
         System.out.println("Server stopped.");
