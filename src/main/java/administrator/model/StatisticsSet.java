@@ -1,7 +1,9 @@
 package administrator.model;
 
+import administrator.exceptions.InvalidParameterException;
 import beans.AverageStatistics;
 import beans.LocalStatistics;
+import debug.Debug;
 
 import java.util.List;
 import java.util.OptionalDouble;
@@ -24,6 +26,7 @@ public class StatisticsSet {
     }
 
     private synchronized SortedSet<LocalStatistics> getStatisticsSet() {
+        Debug.sleep();
         return new TreeSet<>(statisticsSet);
     }
 
@@ -54,15 +57,21 @@ public class StatisticsSet {
         if (!accomplishedRides.isPresent())
             return null;
 
+        Debug.sleep();
+
         return new AverageStatistics(travelledKms.getAsDouble(), batteryLevel.getAsDouble(),
                 pollutionLevel.getAsDouble(), accomplishedRides.getAsDouble());
     }
 
     public synchronized boolean add(LocalStatistics stats) {
+        Debug.sleep();
         return statisticsSet.add(stats);
     }
 
-    public AverageStatistics getTaxiAverage(int id, int n) {
+    public AverageStatistics getTaxiAverage(int id, int n) throws InvalidParameterException {
+        if (n <= 0)
+            throw new InvalidParameterException("n must be positive");
+
         List<LocalStatistics> taxiStatsList = getStatisticsSet().stream()
                 .filter(stats -> stats.getTaxiId() == id)
                 .collect(Collectors.toList());
@@ -71,7 +80,10 @@ public class StatisticsSet {
         return computeAverage(taxiStatsList.subList(fromIndex, taxiStatsList.size()));
     }
 
-    public AverageStatistics getAverage(long t1, long t2) {
+    public AverageStatistics getTimestampsAverage(long t1, long t2) throws InvalidParameterException {
+        if (t1 > t2)
+            throw new InvalidParameterException("t1 must not be greater than t2");
+
         List<LocalStatistics> statsList = getStatisticsSet().stream()
                 .filter(stats -> stats.getTimestamp() >= t1 && stats.getTimestamp() <= t2)
                 .collect(Collectors.toList());

@@ -1,9 +1,11 @@
 package beans;
 
+import debug.Debug;
 import utils.SmartCityUtils;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -28,6 +30,7 @@ public class TaxisSet {
     }
 
     public synchronized Set<TaxiBean> getTaxis() {
+        Debug.sleep();
         return new LinkedHashSet<>(taxis);
     }
 
@@ -37,15 +40,27 @@ public class TaxisSet {
 
     public synchronized TaxiStartInfo add(TaxiBean taxi) {
         Set<TaxiBean> otherTaxis = getTaxis();
+
+        Debug.sleep();
+
         if (taxis.add(taxi)) {
-            Position startPosition = SmartCityUtils.getStartPosition();
-            return new TaxiStartInfo(startPosition, otherTaxis);
+            Position taxiStartPosition = SmartCityUtils.getTaxiStartPosition();
+            return new TaxiStartInfo(taxiStartPosition, otherTaxis);
         }
         else
             return null;
     }
 
     public synchronized boolean remove(int id) {
+        Debug.sleep();
         return taxis.removeIf(taxi -> taxi.getId() == id);
+    }
+
+    @Override
+    public String toString() {
+        return "Taxis list:\n" +
+                taxis.stream()
+                        .map(TaxiBean::toString)
+                        .collect(Collectors.joining("\n"));
     }
 }

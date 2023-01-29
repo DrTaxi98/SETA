@@ -43,6 +43,10 @@ public class TaxiBean {
         this.portNumber = portNumber;
     }
 
+    public String computeSocketAddress() {
+        return ipAddress + ":" + portNumber;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -54,5 +58,13 @@ public class TaxiBean {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    @Override
+    public String toString() {
+        return "Taxi {" +
+                "ID = " + id +
+                ", socket address = " + computeSocketAddress() +
+                '}';
     }
 }

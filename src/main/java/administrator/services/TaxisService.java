@@ -25,7 +25,7 @@ public class TaxisService {
         if (taxiStartInfo != null)
             return Response.ok(taxiStartInfo).build();
         else
-            return Response.status(Response.Status.CONFLICT).build();
+            return Response.status(Response.Status.BAD_REQUEST).entity("Taxi already exists").build();
     }
 
     @Path("{id}/remove")

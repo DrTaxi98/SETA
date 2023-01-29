@@ -50,4 +50,13 @@ public class AverageStatistics {
     public void setAccomplishedRides(double accomplishedRides) {
         this.accomplishedRides = accomplishedRides;
     }
+
+    @Override
+    public String toString() {
+        return "Average statistics:" +
+                "\nTravelled kilometres = " + travelledKms +
+                "\nBattery level = " + batteryLevel +
+                "\nPollution level = " + pollutionLevel +
+                "\nAccomplished rides = " + accomplishedRides;
+    }
 }

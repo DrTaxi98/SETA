@@ -7,22 +7,22 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class TaxiStartInfo {
 
-    private Position startPosition;
+    private Position taxiStartPosition;
     private Set<TaxiBean> otherTaxis;
 
     public TaxiStartInfo() {}
 
-    public TaxiStartInfo(Position startPosition, Set<TaxiBean> otherTaxis) {
-        this.startPosition = startPosition;
+    public TaxiStartInfo(Position taxiStartPosition, Set<TaxiBean> otherTaxis) {
+        this.taxiStartPosition = taxiStartPosition;
         this.otherTaxis = otherTaxis;
     }
 
-    public Position getStartPosition() {
-        return startPosition;
+    public Position getTaxiStartPosition() {
+        return taxiStartPosition;
     }
 
-    public void setStartPosition(Position startPosition) {
-        this.startPosition = startPosition;
+    public void setTaxiStartPosition(Position taxiStartPosition) {
+        this.taxiStartPosition = taxiStartPosition;
     }
 
     public Set<TaxiBean> getOtherTaxis() {
