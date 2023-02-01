@@ -1,23 +1,16 @@
 package beans;
 
-import utils.StringUtils;
-
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class TaxiStartInfo {
 
     private Position startPosition;
-    private Set<TaxiBean> otherTaxis;
+    private OtherTaxisSet otherTaxis;
 
-    public TaxiStartInfo() {
-        otherTaxis = new LinkedHashSet<>();
-    }
+    public TaxiStartInfo() {}
 
-    public TaxiStartInfo(Position startPosition, Set<TaxiBean> otherTaxis) {
+    public TaxiStartInfo(Position startPosition, OtherTaxisSet otherTaxis) {
         this.startPosition = startPosition;
         this.otherTaxis = otherTaxis;
     }
@@ -30,11 +23,11 @@ public class TaxiStartInfo {
         this.startPosition = startPosition;
     }
 
-    public Set<TaxiBean> getOtherTaxis() {
+    public OtherTaxisSet getOtherTaxis() {
         return otherTaxis;
     }
 
-    public void setOtherTaxis(Set<TaxiBean> otherTaxis) {
+    public void setOtherTaxis(OtherTaxisSet otherTaxis) {
         this.otherTaxis = otherTaxis;
     }
 
@@ -42,7 +35,6 @@ public class TaxiStartInfo {
     public String toString() {
         return "Taxi starting info:" +
                 "\n\tStarting position = " + startPosition +
-                "\n\tOther taxis:\n\t\t" +
-                StringUtils.taxisSetToString(otherTaxis, 2);
+                "\n\t" + otherTaxis;
     }
 }

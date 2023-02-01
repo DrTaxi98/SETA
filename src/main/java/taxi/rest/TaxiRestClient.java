@@ -6,6 +6,7 @@ import beans.TaxiStartInfo;
 import com.google.gson.Gson;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import exceptions.RestException;
 import utils.RestUtils;
 
 import javax.ws.rs.core.Response;
@@ -21,20 +22,19 @@ public class TaxiRestClient {
         this.serverAddress = serverAddress;
     }
 
-    public TaxiStartInfo addTaxi(TaxiBean taxi) {
+    public TaxiStartInfo addTaxi(TaxiBean taxi) throws RestException {
         String path = "/taxis/add";
         String input = gson.toJson(taxi);
         ClientResponse clientResponse = RestUtils.postRequest(client, serverAddress + path, input);
 
         if (clientResponse == null)
-            return null;
+            throw new RestException("An error occurred during registration.");
 
         System.out.println(clientResponse);
 
         if (clientResponse.getStatus() == Response.Status.BAD_REQUEST.getStatusCode()) {
             String message = clientResponse.getEntity(String.class);
-            System.out.println(message);
-            return null;
+            throw new RestException(message);
         }
 
         TaxiStartInfo taxiStartInfo = clientResponse.getEntity(TaxiStartInfo.class);
@@ -42,39 +42,32 @@ public class TaxiRestClient {
         return taxiStartInfo;
     }
 
-    public boolean removeTaxi(int id) {
+    public void removeTaxi(int id) throws RestException {
         String path = "/taxis/" + id + "/remove";
         ClientResponse clientResponse = RestUtils.deleteRequest(client, serverAddress + path);
 
         if (clientResponse == null)
-            return false;
+            throw new RestException("An error occurred during taxi removal.");
 
         System.out.println(clientResponse);
 
-        if (clientResponse.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
-            System.out.println("Taxi does not exist.");
-            return false;
-        }
-
-        return true;
+        if (clientResponse.getStatus() == Response.Status.NOT_FOUND.getStatusCode())
+            throw new RestException("Taxi does not exist.");
     }
 
-    public boolean addStatistics(LocalStatistics stats) {
+    public void addStatistics(LocalStatistics stats) throws RestException {
         String path = "/statistics/add";
         String input = gson.toJson(stats);
         ClientResponse clientResponse = RestUtils.postRequest(client, serverAddress + path, input);
 
         if (clientResponse == null)
-            return false;
+            throw new RestException("An error occurred during statistics insertion.");
 
         System.out.println(clientResponse);
 
         if (clientResponse.getStatus() == Response.Status.BAD_REQUEST.getStatusCode()) {
             String message = clientResponse.getEntity(String.class);
-            System.out.println(message);
-            return false;
+            throw new RestException(message);
         }
-
-        return true;
     }
 }

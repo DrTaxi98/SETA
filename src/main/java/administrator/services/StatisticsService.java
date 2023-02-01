@@ -1,6 +1,6 @@
 package administrator.services;
 
-import administrator.exceptions.InvalidParameterException;
+import exceptions.InvalidParameterException;
 import administrator.model.StatisticsSet;
 import beans.AverageStatistics;
 import beans.LocalStatistics;

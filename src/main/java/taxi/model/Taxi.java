@@ -1,8 +1,11 @@
 package taxi.model;
 
+import beans.OtherTaxisSet;
 import beans.Position;
 import beans.TaxiBean;
 import beans.TaxiStartInfo;
+import exceptions.RestException;
+import taxi.grpc.TaxiGrpcClient;
 import taxi.mqtt.TaxiMqttClient;
 import taxi.grpc.TaxiGrpcServer;
 import taxi.rest.TaxiRestClient;
@@ -12,7 +15,7 @@ import taxi.simulators.SlidingWindow;
 import taxi.statistics.StatisticsComputer;
 import utils.StringUtils;
 
-import java.util.Set;
+import java.io.IOException;
 
 public class Taxi {
 
@@ -21,16 +24,17 @@ public class Taxi {
 
     private final int id;
     private final String ipAddress;
-    private final int portNumber;
+    private int portNumber;
     private int batteryLevel;
 
     private Position position = null;
-    private Set<TaxiBean> otherTaxis = null;
+    private OtherTaxisSet otherTaxis = null;
 
     private final TaxiRestClient restClient;
     private Simulator pollutionSensor = null;
     private StatisticsComputer statisticsComputer = null;
     private TaxiGrpcServer grpcServer = null;
+    private TaxiGrpcClient grpcClient = null;
     private TaxiMqttClient mqttClient = null;
 
     public Taxi(int id, String ipAddress, int portNumber, String administratorServerAddress) {
@@ -43,6 +47,14 @@ public class Taxi {
 
     public int getId() {
         return id;
+    }
+
+    public String getIpAddress() {
+        return ipAddress;
+    }
+
+    public int getPortNumber() {
+        return portNumber;
     }
 
     public String getSocketAddress() {
@@ -61,7 +73,7 @@ public class Taxi {
         return position;
     }
 
-    public Set<TaxiBean> getOtherTaxis() {
+    public OtherTaxisSet getOtherTaxis() {
         return otherTaxis;
     }
 
@@ -70,35 +82,37 @@ public class Taxi {
         otherTaxis = startInfo.getOtherTaxis();
     }
 
-    public boolean start() {
-        if (!register())
-            return false;
+    public boolean addOtherTaxi(TaxiBean taxi) {
+        return otherTaxis.add(taxi);
+    }
+
+    public boolean removeOtherTaxi(TaxiBean taxi) {
+        return otherTaxis.remove(taxi);
+    }
+
+    public void start() throws IOException, RestException {
+        startGrpcServer();
+        register();
 
         startPollutionSensor();
         startStatisticsComputer();
 
-        startGrpcServer();
         presentToOtherTaxis();
 
         startMqttClient();
-
-        return true;
     }
 
-    private boolean register() {
+    private void startGrpcServer() throws IOException {
+        grpcServer = new TaxiGrpcServer(this);
+        portNumber = grpcServer.startServer();
+    }
+
+    private void register() throws RestException {
         TaxiBean taxiBean = new TaxiBean(id, ipAddress, portNumber);
         System.out.println("Registering " + taxiBean);
         TaxiStartInfo startInfo = restClient.addTaxi(taxiBean);
-
-        if (startInfo == null) {
-            System.out.println("An error occurred during registration.");
-            return false;
-        }
-
         System.out.println("Taxi registered.");
         setStartInfo(startInfo);
-
-        return true;
     }
 
     private void startPollutionSensor() {
@@ -115,21 +129,16 @@ public class Taxi {
         System.out.println("Statistics computer started.");
     }
 
-    private void startGrpcServer() {
-        grpcServer = new TaxiGrpcServer(portNumber);
-        System.out.println("Starting taxi gRPC server...");
-        grpcServer.start();
-    }
-
     private void presentToOtherTaxis() {
+        grpcClient = new TaxiGrpcClient(this);
         System.out.println("Presenting to other taxis...");
-        //grpc present
+        grpcClient.present(otherTaxis);
         System.out.println("Presented to other taxis.");
     }
 
     private void startMqttClient() {
         mqttClient = new TaxiMqttClient();
-        System.out.println("Starting MQTT Client...");
+        System.out.println("Starting MQTT client...");
         mqttClient.start(position.getDistrict());
     }
 

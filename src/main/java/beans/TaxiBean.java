@@ -45,6 +45,10 @@ public class TaxiBean {
         this.portNumber = portNumber;
     }
 
+    public String computeSocketAddress() {
+        return StringUtils.getSocketAddress(ipAddress, portNumber);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -62,7 +66,7 @@ public class TaxiBean {
     public String toString() {
         return "Taxi {" +
                 "ID = " + id +
-                ", socket address = " + StringUtils.getSocketAddress(ipAddress, portNumber) +
+                ", socket address = " + computeSocketAddress() +
                 '}';
     }
 }

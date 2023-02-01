@@ -1,34 +1,39 @@
 package taxi.client;
 
 import beans.TaxiBean;
+import exceptions.RestException;
 import taxi.model.Taxi;
 
+import java.io.IOException;
 import java.util.Random;
 import java.util.Scanner;
 
 public class TaxiClient {
 
     private static final int MAX_TAXI = 10;
-    private static final int MIN_PORT = 9000;
-    private static final int MAX_PORT = 9100;
+    private static final int PORT_NUMBER = 0;
 
-    private static final String ipAddress = "localhost";
-    private static final String administratorServerAddress = "http://localhost:1337";
+    private static final String IP_ADDRESS = "localhost";
+    private static final String ADMINISTRATOR_SERVER_ADDRESS = "http://localhost:1337";
 
-    private static final String rechargeString = "recharge";
-    private static final String quitString = "quit";
+    private static final String RECHARGE_STRING = "recharge";
+    private static final String QUIT_STRING = "quit";
 
     public static void main(String[] args) {
         Random random = new Random();
         int id = random.nextInt(MAX_TAXI);
-        int portNumber = random.nextInt(MAX_PORT - MIN_PORT) + MIN_PORT;
 
-        TaxiBean taxiBean = new TaxiBean(id, ipAddress, portNumber);
-        System.out.println("Initializing " + taxiBean);
-        Taxi taxi = new Taxi(id, ipAddress, portNumber, administratorServerAddress);
+        Taxi taxi = new Taxi(id, IP_ADDRESS, PORT_NUMBER, ADMINISTRATOR_SERVER_ADDRESS);
         System.out.println("Taxi initialized.");
 
-        if (!taxi.start()) {
+        try {
+            taxi.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Stopping taxi client...");
+            return;
+        } catch (RestException e) {
+            System.out.println(e.getMessage());
             System.out.println("Stopping taxi client...");
             return;
         }
@@ -36,15 +41,15 @@ public class TaxiClient {
         Scanner scanner = new Scanner(System.in);
         String command = "";
 
-        while (!command.equalsIgnoreCase(quitString)) {
+        while (!command.equalsIgnoreCase(QUIT_STRING)) {
             System.out.println("\nCommands available:" +
-                    "\n\t\"" + rechargeString + "\": recharge the battery of the taxi" +
-                    "\n\t\"" + quitString + "\": leave the system" +
+                    "\n\t\"" + RECHARGE_STRING + "\": recharge the battery of the taxi" +
+                    "\n\t\"" + QUIT_STRING + "\": leave the system" +
                     "\n");
             command = scanner.nextLine();
-            if (command.equalsIgnoreCase(rechargeString))
+            if (command.equalsIgnoreCase(RECHARGE_STRING))
                 taxi.recharge();
-            else if (!command.equalsIgnoreCase(quitString)) {
+            else if (!command.equalsIgnoreCase(QUIT_STRING)) {
                 System.out.println("Invalid command: \"" + command + '\"');
             }
         }

@@ -39,7 +39,7 @@ public class TaxisSet {
     }
 
     public synchronized TaxiStartInfo add(TaxiBean taxi) {
-        Set<TaxiBean> otherTaxis = getTaxis();
+        OtherTaxisSet otherTaxis = new OtherTaxisSet(getTaxis());
 
         Debug.sleep();
 

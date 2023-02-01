@@ -9,9 +9,9 @@ import java.sql.Timestamp;
 
 public class TaxiMqttClient {
 
-    private static final String broker = "tcp://localhost:1883";
-    private static final String subTopicPrefix = "seta/smartcity/rides/district";
-    private static final int subQos = 2;
+    private static final String BROKER = "tcp://localhost:1883";
+    private static final String SUB_TOPIC_PREFIX = "seta/smartcity/rides/district";
+    private static final int SUB_QOS = 2;
 
     private MqttClient client;
     private final String clientId = MqttClient.generateClientId();
@@ -19,16 +19,16 @@ public class TaxiMqttClient {
     private final Gson gson = new Gson();
 
     private String getSubTopic() {
-        return subTopicPrefix + district;
+        return SUB_TOPIC_PREFIX + district;
     }
 
     public void start(int district) {
         try {
-            client = new MqttClient(broker, clientId);
+            client = new MqttClient(BROKER, clientId);
             MqttConnectOptions connOpts = new MqttConnectOptions();
             connOpts.setCleanSession(true);
 
-            System.out.println(clientId + " Connecting to broker " + broker);
+            System.out.println(clientId + " Connecting to broker " + BROKER);
             client.connect(connOpts);
             System.out.println(clientId + " Connected - Thread PID: " + Thread.currentThread().getId());
 
@@ -67,7 +67,7 @@ public class TaxiMqttClient {
         String subTopic = getSubTopic();
         System.out.println(clientId + " Subscribing to topic: " + subTopic);
         try {
-            client.subscribe(subTopic, subQos);
+            client.subscribe(subTopic, SUB_QOS);
             System.out.println(clientId + " Subscribed - Thread PID: " + Thread.currentThread().getId());
         } catch (MqttException me) {
             MqttUtils.printMqttException(me);

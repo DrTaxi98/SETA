@@ -1,4 +1,4 @@
-package administrator.exceptions;
+package exceptions;
 
 public class InvalidParameterException extends Exception {
 

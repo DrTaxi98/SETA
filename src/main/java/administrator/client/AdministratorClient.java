@@ -11,7 +11,7 @@ import java.util.Scanner;
 
 public class AdministratorClient {
 
-    private static final String serverAddress = "http://localhost:1337";
+    private static final String SERVER_ADDRESS = "http://localhost:1337";
     private static final Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
@@ -57,7 +57,7 @@ public class AdministratorClient {
 
     private static void getTaxisList(Client client) {
         String path = "/taxis";
-        ClientResponse clientResponse = RestUtils.getRequest(client, serverAddress + path);
+        ClientResponse clientResponse = RestUtils.getRequest(client, SERVER_ADDRESS + path);
 
         if (clientResponse == null)
             return;
@@ -84,7 +84,7 @@ public class AdministratorClient {
     }
 
     private static void getAverageStatistics(Client client, String path) {
-        ClientResponse clientResponse = RestUtils.getRequest(client, serverAddress + path);
+        ClientResponse clientResponse = RestUtils.getRequest(client, SERVER_ADDRESS + path);
 
         if (clientResponse == null)
             return;
