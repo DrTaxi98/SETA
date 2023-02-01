@@ -2,6 +2,8 @@ package seta;
 
 import com.google.gson.Gson;
 import org.eclipse.paho.client.mqttv3.*;
+import taxi.model.RideRequest;
+import utils.MqttUtils;
 import utils.SmartCityUtils;
 
 public class Seta {
@@ -25,10 +27,12 @@ public class Seta {
             System.out.println(clientId + " Connected - Thread PID: " + Thread.currentThread().getId());
 
             client.setCallback(new MqttCallback() {
+
                 public void messageArrived(String topic, MqttMessage message) {}
 
                 public void connectionLost(Throwable cause) {
-                    System.out.println(clientId + " Connection lost! Cause: " + cause.getMessage());
+                    System.out.println(clientId + " Connection lost! Cause: " + cause.getMessage() +
+                            " - Thread PID: " + Thread.currentThread().getId());
                 }
 
                 public void deliveryComplete(IMqttDeliveryToken token) {
@@ -53,24 +57,20 @@ public class Seta {
                 client.disconnect();
             System.out.println(clientId + " Disconnected - Thread PID: " + Thread.currentThread().getId());
         } catch (MqttException me) {
-            System.out.println("Reason: " + me.getReasonCode());
-            System.out.println("Message: " + me.getMessage());
-            System.out.println("Localized message: " + me.getLocalizedMessage());
-            System.out.println("Cause: " + me.getCause());
-            System.out.println("Exception: " + me);
-            me.printStackTrace();
+            MqttUtils.printMqttException(me);
         }
     }
 
     private static void generateAndPublish(MqttClient client) throws MqttException {
         RideRequest rideRequest = SmartCityUtils.randomRideRequest();
+        System.out.println(clientId + " Generated " + rideRequest);
+
         String payload = gson.toJson(rideRequest);
         MqttMessage message = new MqttMessage(payload.getBytes());
 
-        String pubTopic = pubTopicPrefix + SmartCityUtils.getDistrict(rideRequest.getStartingPosition());
+        String pubTopic = pubTopicPrefix + rideRequest.getStartingPosition().getDistrict();
         message.setQos(pubQos);
-        System.out.println(clientId + " Publishing message to topic " + pubTopic +
-                " with payload:\n" + payload);
+        System.out.println(clientId + " Publishing message to topic " + pubTopic);
         client.publish(pubTopic, message);
         System.out.println(clientId + " Message published - Thread PID: " + Thread.currentThread().getId());
     }

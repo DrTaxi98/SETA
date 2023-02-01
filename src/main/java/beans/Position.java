@@ -38,6 +38,19 @@ public class Position {
         this.y = y;
     }
 
+    public int getDistrict() {
+        return SmartCityUtils.getDistrict(x, y);
+    }
+
+    public double distanceTo(Position destination) {
+        int x1 = x;
+        int y1 = y;
+        int x2 = destination.getX();
+        int y2 = destination.getY();
+
+        return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -49,5 +62,13 @@ public class Position {
     @Override
     public int hashCode() {
         return Objects.hash(x, y);
+    }
+
+    @Override
+    public String toString() {
+        return "Position {" +
+                "x = " + x +
+                ", y = " + y +
+                '}';
     }
 }

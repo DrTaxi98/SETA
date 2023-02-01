@@ -54,9 +54,9 @@ public class AverageStatistics {
     @Override
     public String toString() {
         return "Average statistics:" +
-                "\nTravelled kilometres = " + travelledKms +
-                "\nBattery level = " + batteryLevel +
-                "\nPollution level = " + pollutionLevel +
-                "\nAccomplished rides = " + accomplishedRides;
+                "\n\tTravelled kilometres = " + travelledKms +
+                "\n\tBattery level = " + batteryLevel +
+                "\n\tPollution level = " + pollutionLevel +
+                "\n\tAccomplished rides = " + accomplishedRides;
     }
 }

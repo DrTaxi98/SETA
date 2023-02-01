@@ -1,5 +1,6 @@
 package beans;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.OptionalDouble;
@@ -17,7 +18,9 @@ public class LocalStatistics implements Comparable<LocalStatistics> {
     private int accomplishedRides;
     private List<Double> pollutionAverages;
 
-    public LocalStatistics() {}
+    public LocalStatistics() {
+        pollutionAverages = new ArrayList<>();
+    }
 
     public LocalStatistics(int taxiId, long timestamp, int batteryLevel,
                            double travelledKms, int accomplishedRides, List<Double> pollutionAverages) {

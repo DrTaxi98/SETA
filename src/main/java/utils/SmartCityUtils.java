@@ -1,7 +1,7 @@
 package utils;
 
 import beans.Position;
-import seta.RideRequest;
+import taxi.model.RideRequest;
 
 import java.util.Arrays;
 import java.util.List;
@@ -33,10 +33,6 @@ public class SmartCityUtils {
             throw new IllegalArgumentException("Position is outside of the smart city size");
     }
 
-    private static void checkPosition(Position position) {
-        checkPosition(position.getX(), position.getY());
-    }
-
     private static final Random random = new Random();
 
     private static int randomDistrict() {
@@ -60,11 +56,8 @@ public class SmartCityUtils {
         return new RideRequest(startingPosition, destinationPosition);
     }
 
-    public static int getDistrict(Position position) {
-        checkPosition(position);
-
-        int x = position.getX();
-        int y = position.getY();
+    public static int getDistrict(int x, int y) {
+        checkPosition(x, y);
 
         if (x < DISTRICT_SIZE)
             if (y < DISTRICT_SIZE)

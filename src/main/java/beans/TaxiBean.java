@@ -1,5 +1,7 @@
 package beans;
 
+import utils.StringUtils;
+
 import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -43,10 +45,6 @@ public class TaxiBean {
         this.portNumber = portNumber;
     }
 
-    public String computeSocketAddress() {
-        return ipAddress + ":" + portNumber;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -64,7 +62,7 @@ public class TaxiBean {
     public String toString() {
         return "Taxi {" +
                 "ID = " + id +
-                ", socket address = " + computeSocketAddress() +
+                ", socket address = " + StringUtils.getSocketAddress(ipAddress, portNumber) +
                 '}';
     }
 }

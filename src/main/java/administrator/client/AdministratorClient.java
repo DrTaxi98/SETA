@@ -3,9 +3,8 @@ package administrator.client;
 import beans.AverageStatistics;
 import beans.TaxisSet;
 import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
+import utils.RestUtils;
 
 import javax.ws.rs.core.Response;
 import java.util.Scanner;
@@ -58,12 +57,14 @@ public class AdministratorClient {
 
     private static void getTaxisList(Client client) {
         String path = "/taxis";
-        ClientResponse clientResponse = getRequest(client, serverAddress + path);
-        if (clientResponse != null) {
-            System.out.println(clientResponse);
-            TaxisSet taxisSet = clientResponse.getEntity(TaxisSet.class);
-            System.out.println(taxisSet);
-        }
+        ClientResponse clientResponse = RestUtils.getRequest(client, serverAddress + path);
+
+        if (clientResponse == null)
+            return;
+
+        System.out.println(clientResponse);
+        TaxisSet taxisSet = clientResponse.getEntity(TaxisSet.class);
+        System.out.println(taxisSet);
     }
 
     private static void getTaxiAverageStatistics(Client client) {
@@ -83,29 +84,21 @@ public class AdministratorClient {
     }
 
     private static void getAverageStatistics(Client client, String path) {
-        ClientResponse clientResponse = getRequest(client, serverAddress + path);
-        if (clientResponse != null) {
-            System.out.println(clientResponse);
-            if (clientResponse.getStatus() == Response.Status.NOT_FOUND.getStatusCode())
-                System.out.println("No statistics available.");
-            else if (clientResponse.getStatus() == Response.Status.BAD_REQUEST.getStatusCode()) {
-                String message = clientResponse.getEntity(String.class);
-                System.out.println(message);
-            }
-            else {
-                AverageStatistics stats = clientResponse.getEntity(AverageStatistics.class);
-                System.out.println(stats);
-            }
-        }
-    }
+        ClientResponse clientResponse = RestUtils.getRequest(client, serverAddress + path);
 
-    private static ClientResponse getRequest(Client client, String url) {
-        WebResource webResource = client.resource(url);
-        try {
-            return webResource.type("application/json").get(ClientResponse.class);
-        } catch (ClientHandlerException e) {
-            System.out.println("Server not available");
-            return null;
+        if (clientResponse == null)
+            return;
+
+        System.out.println(clientResponse);
+        if (clientResponse.getStatus() == Response.Status.NOT_FOUND.getStatusCode())
+            System.out.println("No statistics available.");
+        else if (clientResponse.getStatus() == Response.Status.BAD_REQUEST.getStatusCode()) {
+            String message = clientResponse.getEntity(String.class);
+            System.out.println(message);
+        }
+        else {
+            AverageStatistics stats = clientResponse.getEntity(AverageStatistics.class);
+            System.out.println(stats);
         }
     }
 

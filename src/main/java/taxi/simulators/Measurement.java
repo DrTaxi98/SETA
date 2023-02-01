@@ -1,4 +1,4 @@
-package simulators;
+package taxi.simulators;
 
 public class Measurement implements Comparable<Measurement> {
 

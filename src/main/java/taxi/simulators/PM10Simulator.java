@@ -1,4 +1,4 @@
-package simulators;
+package taxi.simulators;
 
 public class PM10Simulator extends Simulator {
 

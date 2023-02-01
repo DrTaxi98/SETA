@@ -2,10 +2,10 @@ package beans;
 
 import debug.Debug;
 import utils.SmartCityUtils;
+import utils.StringUtils;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -44,8 +44,8 @@ public class TaxisSet {
         Debug.sleep();
 
         if (taxis.add(taxi)) {
-            Position taxiStartPosition = SmartCityUtils.getTaxiStartPosition();
-            return new TaxiStartInfo(taxiStartPosition, otherTaxis);
+            Position startPosition = SmartCityUtils.getTaxiStartPosition();
+            return new TaxiStartInfo(startPosition, otherTaxis);
         }
         else
             return null;
@@ -58,9 +58,7 @@ public class TaxisSet {
 
     @Override
     public String toString() {
-        return "Taxis list:\n" +
-                taxis.stream()
-                        .map(TaxiBean::toString)
-                        .collect(Collectors.joining("\n"));
+        return "Taxis list:\n\t" +
+                StringUtils.taxisSetToString(taxis, 1);
     }
 }

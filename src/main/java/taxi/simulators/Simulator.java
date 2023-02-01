@@ -1,6 +1,5 @@
-package simulators;
+package taxi.simulators;
 
-import java.util.Calendar;
 import java.util.Random;
 
 public abstract class Simulator extends Thread {

@@ -1,4 +1,4 @@
-package simulators;
+package taxi.simulators;
 
 import java.util.List;
 

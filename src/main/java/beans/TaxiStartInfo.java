@@ -1,5 +1,8 @@
 package beans;
 
+import utils.StringUtils;
+
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -7,22 +10,24 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class TaxiStartInfo {
 
-    private Position taxiStartPosition;
+    private Position startPosition;
     private Set<TaxiBean> otherTaxis;
 
-    public TaxiStartInfo() {}
+    public TaxiStartInfo() {
+        otherTaxis = new LinkedHashSet<>();
+    }
 
-    public TaxiStartInfo(Position taxiStartPosition, Set<TaxiBean> otherTaxis) {
-        this.taxiStartPosition = taxiStartPosition;
+    public TaxiStartInfo(Position startPosition, Set<TaxiBean> otherTaxis) {
+        this.startPosition = startPosition;
         this.otherTaxis = otherTaxis;
     }
 
-    public Position getTaxiStartPosition() {
-        return taxiStartPosition;
+    public Position getStartPosition() {
+        return startPosition;
     }
 
-    public void setTaxiStartPosition(Position taxiStartPosition) {
-        this.taxiStartPosition = taxiStartPosition;
+    public void setStartPosition(Position startPosition) {
+        this.startPosition = startPosition;
     }
 
     public Set<TaxiBean> getOtherTaxis() {
@@ -31,5 +36,13 @@ public class TaxiStartInfo {
 
     public void setOtherTaxis(Set<TaxiBean> otherTaxis) {
         this.otherTaxis = otherTaxis;
+    }
+
+    @Override
+    public String toString() {
+        return "Taxi starting info:" +
+                "\n\tStarting position = " + startPosition +
+                "\n\tOther taxis:\n\t\t" +
+                StringUtils.taxisSetToString(otherTaxis, 2);
     }
 }

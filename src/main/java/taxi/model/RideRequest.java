@@ -1,4 +1,4 @@
-package seta;
+package taxi.model;
 
 import beans.Position;
 
@@ -26,5 +26,13 @@ public class RideRequest {
 
     public Position getDestinationPosition() {
         return destinationPosition;
+    }
+
+    @Override
+    public String toString() {
+        return "Ride request:" +
+                "\n\tID = " + id +
+                "\n\tStarting position\t = " + startingPosition +
+                "\n\tDestination position = " + destinationPosition;
     }
 }
