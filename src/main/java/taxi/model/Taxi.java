@@ -35,6 +35,8 @@ public class Taxi {
     private StatisticsComputer statisticsComputer = null;
     private TaxiGrpcServer grpcServer = null;
     private TaxiGrpcClient grpcClient = null;
+    private RidesQueue ridesQueue = null;
+    private RidesConsumer ridesConsumer = null;
     private TaxiMqttClient mqttClient = null;
 
     public Taxi(int id, String ipAddress, int portNumber, String administratorServerAddress) {
@@ -86,8 +88,8 @@ public class Taxi {
         return otherTaxis.add(taxi);
     }
 
-    public boolean removeOtherTaxi(TaxiBean taxi) {
-        return otherTaxis.remove(taxi);
+    public boolean removeOtherTaxi(int id) {
+        return otherTaxis.remove(id);
     }
 
     public void start() throws IOException, RestException {
@@ -99,6 +101,7 @@ public class Taxi {
 
         presentToOtherTaxis();
 
+        startRidesConsumer();
         startMqttClient();
     }
 
@@ -136,28 +139,37 @@ public class Taxi {
         System.out.println("Presented to other taxis.");
     }
 
+    private void startRidesConsumer() {
+        ridesQueue = new RidesQueue();
+        ridesConsumer = new RidesConsumer(this, ridesQueue);
+        System.out.println("Starting rides consumer...");
+        ridesConsumer.start();
+        System.out.println("Rides consumer started.");
+    }
+
     private void startMqttClient() {
-        mqttClient = new TaxiMqttClient();
+        mqttClient = new TaxiMqttClient(ridesQueue);
         System.out.println("Starting MQTT client...");
         mqttClient.start(position.getDistrict());
     }
 
-    public void accomplishRide(RideRequest ride) {
+    public synchronized void accomplishRide(RideRequest ride) {
         try {
             Thread.sleep(RIDE_TIME);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
+        position = ride.getDestinationPosition();
         int startDistrict = ride.getStartingPosition().getDistrict();
-        int destinationDistrict = ride.getDestinationPosition().getDistrict();
+        int destinationDistrict = position.getDistrict();
         if (startDistrict != destinationDistrict) {
             mqttClient.unsubscribe();
             mqttClient.subscribe(destinationDistrict);
         }
     }
 
-    public void recharge() {
+    public synchronized void recharge() {
         try {
             Thread.sleep(RECHARGE_TIME);
         } catch (InterruptedException e) {
@@ -167,8 +179,34 @@ public class Taxi {
         batteryLevel = 100;
     }
 
-    public void quit() {
+    public synchronized void quit() {
+        mqttClient.disconnect();
 
+        System.out.println("Shutting down ride consumer...");
+        ridesConsumer.shutdown();
+        System.out.println("Ride consumer shut down.");
+
+        System.out.println("Shutting down statistics computer...");
+        statisticsComputer.shutdown();
+        System.out.println("Statistics computer shut down.");
+
+        System.out.println("Shutting down pollution sensor...");
+        pollutionSensor.stopMeGently();
+        System.out.println("Pollution sensor shut down.");
+
+        grpcServer.shutdown();
+
+        System.out.println("Notifying the other taxis...");
+        grpcClient.notifyQuit(otherTaxis);
+        System.out.println("Other taxis notified.");
+
+        try {
+            System.out.println("Requesting the Administrator Server to leave the smart city...");
+            restClient.removeTaxi(id);
+            System.out.println("Taxi removed from the Administrator Server.");
+        } catch (RestException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     @Override

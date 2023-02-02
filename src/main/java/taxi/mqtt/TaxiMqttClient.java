@@ -3,6 +3,7 @@ package taxi.mqtt;
 import com.google.gson.Gson;
 import org.eclipse.paho.client.mqttv3.*;
 import taxi.model.RideRequest;
+import taxi.model.RidesQueue;
 import utils.MqttUtils;
 
 import java.sql.Timestamp;
@@ -18,19 +19,19 @@ public class TaxiMqttClient {
     private int district = 0;
     private final Gson gson = new Gson();
 
+    private final RidesQueue ridesQueue;
+
+    public TaxiMqttClient(RidesQueue ridesQueue) {
+        this.ridesQueue = ridesQueue;
+    }
+
     private String getSubTopic() {
         return SUB_TOPIC_PREFIX + district;
     }
 
     public void start(int district) {
         try {
-            client = new MqttClient(BROKER, clientId);
-            MqttConnectOptions connOpts = new MqttConnectOptions();
-            connOpts.setCleanSession(true);
-
-            System.out.println(clientId + " Connecting to broker " + BROKER);
-            client.connect(connOpts);
-            System.out.println(clientId + " Connected - Thread PID: " + Thread.currentThread().getId());
+            client = MqttUtils.connect(BROKER, clientId);
 
             client.setCallback(new MqttCallback() {
 
@@ -46,6 +47,8 @@ public class TaxiMqttClient {
                             "\nQoS: " + message.getQos() +
                             "\nMessage: " + rideRequest +
                             '\n');
+
+                    ridesQueue.put(rideRequest);
                 }
 
                 public void connectionLost(Throwable cause) {

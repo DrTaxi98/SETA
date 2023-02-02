@@ -37,7 +37,10 @@ public class TaxiGrpcServer extends Thread {
     }
 
     public void shutdown() {
-        if (!server.isShutdown())
+        if (!server.isShutdown()) {
+            System.out.println("[gRPC Server] Shutting down...");
             server.shutdown();
+            System.out.println("[gRPC Server] Shut down.");
+        }
     }
 }

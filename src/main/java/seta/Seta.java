@@ -15,16 +15,8 @@ public class Seta {
     private static final Gson gson = new Gson();
 
     public static void main(String[] args) {
-        MqttClient client;
-
         try {
-            client = new MqttClient(BROKER, CLIENT_ID);
-            MqttConnectOptions connOpts = new MqttConnectOptions();
-            connOpts.setCleanSession(true);
-
-            System.out.println(CLIENT_ID + " Connecting to broker " + BROKER);
-            client.connect(connOpts);
-            System.out.println(CLIENT_ID + " Connected - Thread PID: " + Thread.currentThread().getId());
+            MqttClient client = MqttUtils.connect(BROKER, CLIENT_ID);
 
             client.setCallback(new MqttCallback() {
 

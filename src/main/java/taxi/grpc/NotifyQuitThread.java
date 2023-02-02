@@ -2,7 +2,8 @@ package taxi.grpc;
 
 import beans.TaxiBean;
 import com.seta.taxi.PresentationServiceGrpc;
-import com.seta.taxi.PresentationServiceOuterClass;
+import com.seta.taxi.PresentationServiceGrpc.*;
+import com.seta.taxi.PresentationServiceOuterClass.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
@@ -10,12 +11,12 @@ import taxi.model.Taxi;
 
 import java.util.concurrent.TimeUnit;
 
-public class PresentationThread extends Thread {
+public class NotifyQuitThread extends Thread {
 
     private final Taxi taxi;
     private final TaxiBean otherTaxi;
 
-    public PresentationThread(Taxi taxi, TaxiBean otherTaxi) {
+    public NotifyQuitThread(Taxi taxi, TaxiBean otherTaxi) {
         this.taxi = taxi;
         this.otherTaxi = otherTaxi;
     }
@@ -25,25 +26,20 @@ public class PresentationThread extends Thread {
         final ManagedChannel channel = ManagedChannelBuilder.forTarget(otherTaxi.computeSocketAddress())
                 .usePlaintext()
                 .build();
-        PresentationServiceGrpc.PresentationServiceStub stub = PresentationServiceGrpc.newStub(channel);
+        PresentationServiceStub stub = PresentationServiceGrpc.newStub(channel);
 
-        PresentationServiceOuterClass.TaxiPresentation request = PresentationServiceOuterClass.TaxiPresentation.newBuilder()
+        TaxiId request = TaxiId.newBuilder()
                 .setId(taxi.getId())
-                .setIpAddress(taxi.getIpAddress())
-                .setPortNumber(taxi.getPortNumber())
-                .setPosition(PresentationServiceOuterClass.TaxiPresentation.Position.newBuilder()
-                        .setX(taxi.getPosition().getX())
-                        .setY(taxi.getPosition().getY())
-                        .build())
                 .build();
 
-        stub.present(request, new StreamObserver<PresentationServiceOuterClass.OkResponse>() {
+        stub.notifyQuit(request, new StreamObserver<TaxiResponse>() {
 
-            public void onNext(PresentationServiceOuterClass.OkResponse response) {
+            public void onNext(TaxiResponse response) {
+                int id = response.getId();
                 if (response.getOk())
-                    System.out.println("A taxi accepted the presentation.");
+                    System.out.println("Taxi " + id + " accepted the notification.");
                 else
-                    System.out.println("A taxi did not accept the presentation.");
+                    System.out.println("Taxi " + id + " did not accept the notification.");
             }
 
             public void onError(Throwable throwable) {

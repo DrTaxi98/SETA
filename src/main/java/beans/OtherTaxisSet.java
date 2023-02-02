@@ -37,9 +37,9 @@ public class OtherTaxisSet {
         return otherTaxis.add(taxi);
     }
 
-    public synchronized boolean remove(TaxiBean taxi) {
+    public synchronized boolean remove(int id) {
         Debug.sleep();
-        return otherTaxis.remove(taxi);
+        return otherTaxis.removeIf(taxi -> taxi.getId() == id);
     }
 
     @Override

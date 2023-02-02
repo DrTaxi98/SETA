@@ -16,7 +16,7 @@ public class PresentationServiceImpl extends PresentationServiceImplBase {
     }
 
     @Override
-    public void present(TaxiPresentation request, StreamObserver<OkResponse> responseObserver) {
+    public void present(TaxiPresentation request, StreamObserver<TaxiResponse> responseObserver) {
         int id = request.getId();
         String ipAddress = request.getIpAddress();
         int portNumber = request.getPortNumber();
@@ -30,13 +30,36 @@ public class PresentationServiceImpl extends PresentationServiceImplBase {
 
         boolean result = taxi.addOtherTaxi(otherTaxi);
         if (result)
-            System.out.println("Taxi added.");
+            System.out.println("Taxi " + id + " added.");
         else
-            System.out.println("Taxi not added.");
+            System.out.println("Taxi " + id + " is already present.");
 
         System.out.println(taxi.getOtherTaxis());
 
-        OkResponse response = OkResponse.newBuilder()
+        TaxiResponse response = TaxiResponse.newBuilder()
+                .setId(taxi.getId())
+                .setOk(result)
+                .build();
+
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void notifyQuit(TaxiId request, StreamObserver<TaxiResponse> responseObserver) {
+        int id = request.getId();
+        System.out.println("Taxi " + id + " is leaving the system.");
+
+        boolean result = taxi.removeOtherTaxi(id);
+        if (result)
+            System.out.println("Taxi " + id + " removed.");
+        else
+            System.out.println("Taxi " + id + " does not exist.");
+
+        System.out.println(taxi.getOtherTaxis());
+
+        TaxiResponse response = TaxiResponse.newBuilder()
+                .setId(taxi.getId())
                 .setOk(result)
                 .build();
 

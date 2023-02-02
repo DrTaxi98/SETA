@@ -1,6 +1,5 @@
 package taxi.client;
 
-import beans.TaxiBean;
 import exceptions.RestException;
 import taxi.model.Taxi;
 
