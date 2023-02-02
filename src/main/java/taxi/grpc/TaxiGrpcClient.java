@@ -2,6 +2,7 @@ package taxi.grpc;
 
 import beans.OtherTaxisSet;
 import beans.TaxiBean;
+import taxi.model.RideRequest;
 import taxi.model.Taxi;
 
 import java.util.ArrayList;
@@ -49,5 +50,9 @@ public class TaxiGrpcClient {
                 e.printStackTrace();
             }
         }
+    }
+
+    public void startElection(RideRequest ride) {
+
     }
 }

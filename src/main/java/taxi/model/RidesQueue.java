@@ -12,8 +12,6 @@ public class RidesQueue {
     }
 
     public synchronized RideRequest take() {
-        RideRequest ride = null;
-
         while (buffer.size() == 0) {
             try {
                 wait();
@@ -22,7 +20,6 @@ public class RidesQueue {
             }
         }
 
-        ride = buffer.remove(0);
-        return ride;
+        return buffer.remove(0);
     }
 }

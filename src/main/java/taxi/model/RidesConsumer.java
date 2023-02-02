@@ -19,7 +19,7 @@ public class RidesConsumer extends Thread {
     }
 
     public void consume(RideRequest ride) {
-        System.out.println("Consuming " + ride);
+        taxi.startElection(ride);
     }
 
     public void shutdown() {

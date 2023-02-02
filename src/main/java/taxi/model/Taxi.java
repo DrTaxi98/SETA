@@ -153,6 +153,10 @@ public class Taxi {
         mqttClient.start(position.getDistrict());
     }
 
+    public synchronized void startElection(RideRequest ride) {
+        grpcClient.startElection(ride);
+    }
+
     public synchronized void accomplishRide(RideRequest ride) {
         try {
             Thread.sleep(RIDE_TIME);
