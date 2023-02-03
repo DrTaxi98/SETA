@@ -1,4 +1,4 @@
-package taxi.grpc;
+package taxi.grpc.presentation;
 
 import beans.TaxiBean;
 import com.seta.taxi.PresentationServiceGrpc;
@@ -34,9 +34,9 @@ public class NotifyQuitThread extends Thread {
 
         stub.notifyQuit(request, new StreamObserver<TaxiResponse>() {
 
-            public void onNext(TaxiResponse response) {
-                int id = response.getId();
-                if (response.getOk())
+            public void onNext(TaxiResponse taxiResponse) {
+                int id = taxiResponse.getId();
+                if (taxiResponse.getOk())
                     System.out.println("Taxi " + id + " accepted the notification.");
                 else
                     System.out.println("Taxi " + id + " did not accept the notification.");

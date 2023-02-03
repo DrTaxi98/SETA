@@ -1,7 +1,9 @@
-package taxi.grpc;
+package taxi.grpc.server;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import taxi.grpc.presentation.PresentationServiceImpl;
+import taxi.grpc.ride.RideServiceImpl;
 import taxi.model.Taxi;
 
 import java.io.IOException;
@@ -13,6 +15,7 @@ public class TaxiGrpcServer extends Thread {
     public TaxiGrpcServer(Taxi taxi) {
         server = ServerBuilder.forPort(taxi.getPortNumber())
                 .addService(new PresentationServiceImpl(taxi))
+                .addService(new RideServiceImpl(taxi))
                 .build();
     }
 

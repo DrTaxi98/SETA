@@ -4,8 +4,8 @@ import debug.Debug;
 import utils.SmartCityUtils;
 import utils.StringUtils;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -15,12 +15,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class TaxisSet {
 
-    private Set<TaxiBean> taxis;
+    private SortedSet<TaxiBean> taxis;
 
     private static TaxisSet instance;
 
     private TaxisSet() {
-        taxis = new LinkedHashSet<>();
+        taxis = new TreeSet<>();
     }
 
     public synchronized static TaxisSet getInstance() {
@@ -29,12 +29,12 @@ public class TaxisSet {
         return instance;
     }
 
-    public synchronized Set<TaxiBean> getTaxis() {
+    public synchronized SortedSet<TaxiBean> getTaxis() {
         Debug.sleep();
-        return new LinkedHashSet<>(taxis);
+        return new TreeSet<>(taxis);
     }
 
-    public synchronized void setTaxis(Set<TaxiBean> taxis) {
+    public synchronized void setTaxis(SortedSet<TaxiBean> taxis) {
         this.taxis = taxis;
     }
 

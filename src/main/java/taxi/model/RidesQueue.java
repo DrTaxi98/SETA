@@ -4,14 +4,14 @@ import java.util.ArrayList;
 
 public class RidesQueue {
 
-    public ArrayList<RideRequest> buffer = new ArrayList<>();
+    public ArrayList<Ride> buffer = new ArrayList<>();
 
-    public synchronized void put(RideRequest ride) {
+    public synchronized void put(Ride ride) {
         buffer.add(ride);
         notify();
     }
 
-    public synchronized RideRequest take() {
+    public synchronized Ride take() {
         while (buffer.size() == 0) {
             try {
                 wait();
@@ -21,5 +21,9 @@ public class RidesQueue {
         }
 
         return buffer.remove(0);
+    }
+
+    public synchronized void clear() {
+        buffer.clear();
     }
 }

@@ -6,13 +6,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class TaxiStartInfo {
 
     private Position startPosition;
-    private OtherTaxisSet otherTaxis;
+    private OtherTaxisSet otherTaxisSet;
 
     public TaxiStartInfo() {}
 
-    public TaxiStartInfo(Position startPosition, OtherTaxisSet otherTaxis) {
+    public TaxiStartInfo(Position startPosition, OtherTaxisSet otherTaxisSet) {
         this.startPosition = startPosition;
-        this.otherTaxis = otherTaxis;
+        this.otherTaxisSet = otherTaxisSet;
     }
 
     public Position getStartPosition() {
@@ -23,18 +23,18 @@ public class TaxiStartInfo {
         this.startPosition = startPosition;
     }
 
-    public OtherTaxisSet getOtherTaxis() {
-        return otherTaxis;
+    public OtherTaxisSet getOtherTaxisSet() {
+        return otherTaxisSet;
     }
 
-    public void setOtherTaxis(OtherTaxisSet otherTaxis) {
-        this.otherTaxis = otherTaxis;
+    public void setOtherTaxisSet(OtherTaxisSet otherTaxisSet) {
+        this.otherTaxisSet = otherTaxisSet;
     }
 
     @Override
     public String toString() {
         return "Taxi starting info:" +
                 "\n\tStarting position = " + startPosition +
-                "\n\t" + otherTaxis;
+                "\n\t" + otherTaxisSet;
     }
 }

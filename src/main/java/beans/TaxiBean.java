@@ -7,7 +7,7 @@ import java.util.Objects;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "Taxi")
-public class TaxiBean {
+public class TaxiBean implements Comparable<TaxiBean> {
 
     private int id;
     private String ipAddress;
@@ -60,6 +60,11 @@ public class TaxiBean {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    @Override
+    public int compareTo(TaxiBean o) {
+        return Integer.compare(id, o.id);
     }
 
     @Override

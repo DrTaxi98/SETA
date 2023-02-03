@@ -5,9 +5,11 @@ import beans.Position;
 import beans.TaxiBean;
 import beans.TaxiStartInfo;
 import exceptions.RestException;
-import taxi.grpc.TaxiGrpcClient;
+import taxi.grpc.presentation.PresentationClient;
+import taxi.grpc.recharge.RechargeClient;
+import taxi.grpc.ride.RideClient;
 import taxi.mqtt.TaxiMqttClient;
-import taxi.grpc.TaxiGrpcServer;
+import taxi.grpc.server.TaxiGrpcServer;
 import taxi.rest.TaxiRestClient;
 import taxi.simulators.PM10Simulator;
 import taxi.simulators.Simulator;
@@ -28,16 +30,21 @@ public class Taxi {
     private int batteryLevel;
 
     private Position position = null;
-    private OtherTaxisSet otherTaxis = null;
+    private OtherTaxisSet otherTaxisSet = null;
 
     private final TaxiRestClient restClient;
-    private Simulator pollutionSensor = null;
-    private StatisticsComputer statisticsComputer = null;
-    private TaxiGrpcServer grpcServer = null;
-    private TaxiGrpcClient grpcClient = null;
-    private RidesQueue ridesQueue = null;
-    private RidesConsumer ridesConsumer = null;
-    private TaxiMqttClient mqttClient = null;
+    private final TaxiGrpcServer grpcServer = new TaxiGrpcServer(this);
+    private final PresentationClient presentationClient = new PresentationClient(this);
+    private final RideClient rideClient = new RideClient(this);
+    private final RechargeClient rechargeClient = new RechargeClient(this);
+    private final Simulator pollutionSensor = new PM10Simulator(new SlidingWindow());
+    private final StatisticsComputer statisticsComputer = new StatisticsComputer();
+    private final RidesQueue ridesQueue = new RidesQueue();
+    private final RideElectionsSet rideElectionsSet = new RideElectionsSet();
+    private final RidesConsumer ridesConsumer = new RidesConsumer(this, ridesQueue);
+    private final TaxiMqttClient mqttClient = new TaxiMqttClient(ridesQueue);
+
+    private boolean available = true;
 
     public Taxi(int id, String ipAddress, int portNumber, String administratorServerAddress) {
         this.id = id;
@@ -67,7 +74,7 @@ public class Taxi {
         return batteryLevel;
     }
 
-    public void consumeBatteryLevel(int amount) {
+    private void consumeBatteryLevel(int amount) {
         batteryLevel = Math.max(batteryLevel - amount, 0);
     }
 
@@ -75,39 +82,79 @@ public class Taxi {
         return position;
     }
 
-    public OtherTaxisSet getOtherTaxis() {
-        return otherTaxis;
+    public boolean isInDistrict(Ride ride) {
+        return position.getDistrict() == ride.getStartingPosition().getDistrict();
+    }
+
+    public OtherTaxisSet getOtherTaxisSet() {
+        return otherTaxisSet;
+    }
+
+    public boolean addOtherTaxi(TaxiBean taxi) {
+        return otherTaxisSet.add(taxi);
+    }
+
+    public TaxiBean getNextTaxi() {
+        return otherTaxisSet.getNext(id);
+    }
+
+    public boolean isOtherTaxiPresent(int id) {
+        return otherTaxisSet.isPresent(id);
+    }
+
+    public boolean removeOtherTaxi(int id) {
+        return otherTaxisSet.remove(id);
     }
 
     private void setStartInfo(TaxiStartInfo startInfo) {
         position = startInfo.getStartPosition();
-        otherTaxis = startInfo.getOtherTaxis();
+        otherTaxisSet = startInfo.getOtherTaxisSet();
     }
 
-    public boolean addOtherTaxi(TaxiBean taxi) {
-        return otherTaxis.add(taxi);
+    public RideCriteria getRideCriteria(Ride ride) {
+        double distance = position.distanceFrom(ride.getStartingPosition());
+        return new RideCriteria(distance, batteryLevel, id);
     }
 
-    public boolean removeOtherTaxi(int id) {
-        return otherTaxis.remove(id);
+    public RideElection getRideElection(Ride ride) {
+        return rideElectionsSet.getOrAdd(ride, rideClient);
+    }
+
+    public RideElection getRideElection(int rideId) {
+        return rideElectionsSet.getOrAdd(rideId, rideClient);
+    }
+
+    public boolean removeRideElection(RideElection rideElection) {
+        return rideElectionsSet.remove(rideElection);
+    }
+
+    public boolean isAvailable() {
+        return available;
     }
 
     public void start() throws IOException, RestException {
-        startGrpcServer();
+        portNumber = grpcServer.startServer();
+
         register();
 
-        startPollutionSensor();
-        startStatisticsComputer();
+        System.out.println("Starting pollution sensor...");
+        pollutionSensor.start();
+        System.out.println("Pollution sensor started.");
 
-        presentToOtherTaxis();
+        System.out.println("Starting statistics computer...");
+        statisticsComputer.start();
+        System.out.println("Statistics computer started.");
 
-        startRidesConsumer();
-        startMqttClient();
-    }
+        System.out.println("Presenting to other taxis...");
+        presentationClient.present(otherTaxisSet);
+        System.out.println("Presented to other taxis.");
 
-    private void startGrpcServer() throws IOException {
-        grpcServer = new TaxiGrpcServer(this);
-        portNumber = grpcServer.startServer();
+        System.out.println("Starting rides consumer...");
+        ridesConsumer.start();
+        System.out.println("Rides consumer started.");
+
+        System.out.println("Starting MQTT client...");
+        mqttClient.start(position.getDistrict());
     }
 
     private void register() throws RestException {
@@ -118,69 +165,48 @@ public class Taxi {
         setStartInfo(startInfo);
     }
 
-    private void startPollutionSensor() {
-        pollutionSensor = new PM10Simulator(new SlidingWindow());
-        System.out.println("Starting pollution sensor...");
-        pollutionSensor.start();
-        System.out.println("Pollution sensor started.");
-    }
+    public synchronized void accomplishRide(Ride ride) {
+        available = false;
 
-    private void startStatisticsComputer() {
-        statisticsComputer = new StatisticsComputer();
-        System.out.println("Starting statistics computer...");
-        statisticsComputer.start();
-        System.out.println("Statistics computer started.");
-    }
+        int kms = (int) position.distanceFrom(ride.getStartingPosition());
+        consumeBatteryLevel(kms);
 
-    private void presentToOtherTaxis() {
-        grpcClient = new TaxiGrpcClient(this);
-        System.out.println("Presenting to other taxis...");
-        grpcClient.present(otherTaxis);
-        System.out.println("Presented to other taxis.");
-    }
-
-    private void startRidesConsumer() {
-        ridesQueue = new RidesQueue();
-        ridesConsumer = new RidesConsumer(this, ridesQueue);
-        System.out.println("Starting rides consumer...");
-        ridesConsumer.start();
-        System.out.println("Rides consumer started.");
-    }
-
-    private void startMqttClient() {
-        mqttClient = new TaxiMqttClient(ridesQueue);
-        System.out.println("Starting MQTT client...");
-        mqttClient.start(position.getDistrict());
-    }
-
-    public synchronized void startElection(RideRequest ride) {
-        grpcClient.startElection(ride);
-    }
-
-    public synchronized void accomplishRide(RideRequest ride) {
         try {
+            System.out.println("Accomplishing " + ride);
             Thread.sleep(RIDE_TIME);
+            System.out.println("Ride accomplished.");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        kms = (int) ride.getDistance();
+        consumeBatteryLevel(kms);
 
         position = ride.getDestinationPosition();
         int startDistrict = ride.getStartingPosition().getDistrict();
         int destinationDistrict = position.getDistrict();
         if (startDistrict != destinationDistrict) {
             mqttClient.unsubscribe();
+            ridesQueue.clear();
             mqttClient.subscribe(destinationDistrict);
         }
+
+        available = true;
     }
 
     public synchronized void recharge() {
+        available = false;
+
         try {
+            System.out.println("Recharging...");
             Thread.sleep(RECHARGE_TIME);
+            System.out.println("Recharged.");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
         batteryLevel = 100;
+        available = true;
     }
 
     public synchronized void quit() {
@@ -201,7 +227,7 @@ public class Taxi {
         grpcServer.shutdown();
 
         System.out.println("Notifying the other taxis...");
-        grpcClient.notifyQuit(otherTaxis);
+        presentationClient.notifyQuit(otherTaxisSet);
         System.out.println("Other taxis notified.");
 
         try {

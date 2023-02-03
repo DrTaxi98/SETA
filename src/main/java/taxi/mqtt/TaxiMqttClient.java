@@ -2,7 +2,7 @@ package taxi.mqtt;
 
 import com.google.gson.Gson;
 import org.eclipse.paho.client.mqttv3.*;
-import taxi.model.RideRequest;
+import taxi.model.Ride;
 import taxi.model.RidesQueue;
 import utils.MqttUtils;
 
@@ -38,17 +38,17 @@ public class TaxiMqttClient {
                 public void messageArrived(String topic, MqttMessage message) {
                     String time = new Timestamp(System.currentTimeMillis()).toString();
                     String payload = new String(message.getPayload());
-                    RideRequest rideRequest = gson.fromJson(payload, RideRequest.class);
+                    Ride ride = gson.fromJson(payload, Ride.class);
 
                     System.out.println(clientId + " Received a message! - Callback - Thread PID: " +
                             Thread.currentThread().getId() +
                             "\nTime: " + time +
                             "\nTopic: " + topic +
                             "\nQoS: " + message.getQos() +
-                            "\nMessage: " + rideRequest +
+                            "\nMessage: " + ride +
                             '\n');
 
-                    ridesQueue.put(rideRequest);
+                    ridesQueue.put(ride);
                 }
 
                 public void connectionLost(Throwable cause) {

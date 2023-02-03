@@ -1,0 +1,41 @@
+syntax = "proto3";
+package com.seta.taxi;
+
+message Election {
+
+  message Ride {
+    uint32 id = 1;
+
+    message Position {
+      uint32 x = 1;
+      uint32 y = 2;
+    }
+
+    Position startingPosition = 2;
+    Position destinationPosition = 3;
+  }
+
+  Ride ride = 1;
+
+  message Criteria {
+    double distance = 2;
+    uint32 batteryLevel = 3;
+    uint32 taxiId = 4;
+  }
+
+  Criteria criteria = 2;
+}
+
+message Elected {
+  uint32 rideId = 1;
+  uint32 taxiId = 2;
+}
+
+message ElectionResponse {
+  uint32 taxiId = 1;
+}
+
+service RideService {
+  rpc elect(Election) returns (ElectionResponse);
+  rpc stopElection(Elected) returns (ElectionResponse);
+}

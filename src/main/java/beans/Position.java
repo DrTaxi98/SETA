@@ -42,7 +42,7 @@ public class Position {
         return SmartCityUtils.getDistrict(x, y);
     }
 
-    public double distanceTo(Position destination) {
+    public double distanceFrom(Position destination) {
         int x1 = x;
         int y1 = y;
         int x2 = destination.getX();

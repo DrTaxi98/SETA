@@ -18,8 +18,8 @@ public class RidesConsumer extends Thread {
         }
     }
 
-    public void consume(RideRequest ride) {
-        taxi.startElection(ride);
+    public void consume(Ride ride) {
+        taxi.getRideElection(ride).startElection();
     }
 
     public void shutdown() {

@@ -1,18 +1,17 @@
-package taxi.grpc;
+package taxi.grpc.presentation;
 
 import beans.OtherTaxisSet;
 import beans.TaxiBean;
-import taxi.model.RideRequest;
 import taxi.model.Taxi;
 
 import java.util.ArrayList;
 import java.util.Set;
 
-public class TaxiGrpcClient {
+public class PresentationClient {
 
     private final Taxi taxi;
 
-    public TaxiGrpcClient(Taxi taxi) {
+    public PresentationClient(Taxi taxi) {
         this.taxi = taxi;
     }
 
@@ -50,9 +49,5 @@ public class TaxiGrpcClient {
                 e.printStackTrace();
             }
         }
-    }
-
-    public void startElection(RideRequest ride) {
-
     }
 }

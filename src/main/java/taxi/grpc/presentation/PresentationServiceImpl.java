@@ -1,4 +1,4 @@
-package taxi.grpc;
+package taxi.grpc.presentation;
 
 import beans.Position;
 import beans.TaxiBean;
@@ -34,7 +34,7 @@ public class PresentationServiceImpl extends PresentationServiceImplBase {
         else
             System.out.println("Taxi " + id + " is already present.");
 
-        System.out.println(taxi.getOtherTaxis());
+        System.out.println(taxi.getOtherTaxisSet());
 
         TaxiResponse response = TaxiResponse.newBuilder()
                 .setId(taxi.getId())
@@ -56,7 +56,7 @@ public class PresentationServiceImpl extends PresentationServiceImplBase {
         else
             System.out.println("Taxi " + id + " does not exist.");
 
-        System.out.println(taxi.getOtherTaxis());
+        System.out.println(taxi.getOtherTaxisSet());
 
         TaxiResponse response = TaxiResponse.newBuilder()
                 .setId(taxi.getId())
