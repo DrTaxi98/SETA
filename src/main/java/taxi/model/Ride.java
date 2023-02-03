@@ -1,6 +1,7 @@
 package taxi.model;
 
 import beans.Position;
+import com.seta.taxi.RideServiceOuterClass.*;
 
 import java.util.Objects;
 
@@ -20,6 +21,12 @@ public class Ride {
         this.id = id;
         this.startingPosition = startingPosition;
         this.destinationPosition = destinationPosition;
+    }
+
+    public Ride(Election.Ride ride) {
+        id = ride.getId();
+        startingPosition = new Position(ride.getStartingPosition());
+        destinationPosition = new Position(ride.getDestinationPosition());
     }
 
     public int getId() {

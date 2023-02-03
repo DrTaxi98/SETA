@@ -15,6 +15,7 @@ import taxi.simulators.PM10Simulator;
 import taxi.simulators.Simulator;
 import taxi.simulators.SlidingWindow;
 import taxi.statistics.StatisticsComputer;
+import utils.SmartCityUtils;
 import utils.StringUtils;
 
 import java.io.IOException;
@@ -74,8 +75,8 @@ public class Taxi {
         return batteryLevel;
     }
 
-    private void consumeBatteryLevel(int amount) {
-        batteryLevel = Math.max(batteryLevel - amount, 0);
+    private void consumeBatteryLevel(double kms) {
+        batteryLevel = (int) Math.max(batteryLevel - kms, 0);
     }
 
     public Position getPosition() {
@@ -168,18 +169,21 @@ public class Taxi {
     public synchronized void accomplishRide(Ride ride) {
         available = false;
 
-        int kms = (int) position.distanceFrom(ride.getStartingPosition());
+        Position startingPosition = ride.getStartingPosition();
+        double kms = position.distanceFrom(startingPosition);
         consumeBatteryLevel(kms);
+        position = startingPosition;
 
         try {
-            System.out.println("Accomplishing " + ride);
+            System.out.println(this +
+                    "\nAccomplishing " + ride);
             Thread.sleep(RIDE_TIME);
             System.out.println("Ride accomplished.");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        kms = (int) ride.getDistance();
+        kms = ride.getDistance();
         consumeBatteryLevel(kms);
 
         position = ride.getDestinationPosition();
@@ -191,14 +195,20 @@ public class Taxi {
             mqttClient.subscribe(destinationDistrict);
         }
 
+        System.out.println(this);
         available = true;
     }
 
     public synchronized void recharge() {
         available = false;
 
+        Position rechargingStation = SmartCityUtils.getRechargingStation(position.getDistrict());
+        double kms = position.distanceFrom(rechargingStation);
+        consumeBatteryLevel(kms);
+        position = rechargingStation;
+
         try {
-            System.out.println("Recharging...");
+            System.out.println("Recharging " + this);
             Thread.sleep(RECHARGE_TIME);
             System.out.println("Recharged.");
         } catch (InterruptedException e) {
@@ -206,6 +216,7 @@ public class Taxi {
         }
 
         batteryLevel = 100;
+        System.out.println(this);
         available = true;
     }
 

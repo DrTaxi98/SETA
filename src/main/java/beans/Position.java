@@ -1,5 +1,6 @@
 package beans;
 
+import com.seta.taxi.RideServiceOuterClass.*;
 import utils.SmartCityUtils;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -18,6 +19,11 @@ public class Position {
         SmartCityUtils.checkPosition(x, y);
         this.x = x;
         this.y = y;
+    }
+
+    public Position(Election.Ride.Position position) {
+        x = position.getX();
+        y = position.getY();
     }
 
     public int getX() {

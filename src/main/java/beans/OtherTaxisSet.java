@@ -39,6 +39,9 @@ public class OtherTaxisSet {
     }
 
     public TaxiBean getNext(int id) {
+        if (otherTaxis.isEmpty())
+            return null;
+
         SortedSet<TaxiBean> otherTaxis = getOtherTaxis();
         for (TaxiBean otherTaxi : otherTaxis) {
             if (otherTaxi.getId() > id)

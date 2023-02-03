@@ -9,7 +9,9 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 import taxi.model.Ride;
 import taxi.model.RideCriteria;
+import taxi.model.RideElection;
 import taxi.model.Taxi;
+import utils.RideUtils;
 
 import java.util.concurrent.TimeUnit;
 
@@ -22,7 +24,10 @@ public class RideClient {
     }
 
     public void sendElection(Ride ride) {
-        TaxiBean nextTaxi = taxi.getNextTaxi();
+        TaxiBean nextTaxi = getNextTaxi(ride);
+        if (nextTaxi == null)
+            return;
+
         final ManagedChannel channel = ManagedChannelBuilder.forTarget(nextTaxi.computeSocketAddress())
                 .usePlaintext()
                 .build();
@@ -57,7 +62,10 @@ public class RideClient {
     }
 
     public void forwardElection(Election request) {
-        TaxiBean nextTaxi = taxi.getNextTaxi();
+        TaxiBean nextTaxi = getNextTaxi(request);
+        if (nextTaxi == null)
+            return;
+
         final ManagedChannel channel = ManagedChannelBuilder.forTarget(nextTaxi.computeSocketAddress())
                 .usePlaintext()
                 .build();
@@ -94,7 +102,10 @@ public class RideClient {
     }
 
     public void sendElected(Ride ride) {
-        TaxiBean nextTaxi = taxi.getNextTaxi();
+        TaxiBean nextTaxi = getNextTaxi(ride);
+        if (nextTaxi == null)
+            return;
+
         final ManagedChannel channel = ManagedChannelBuilder.forTarget(nextTaxi.computeSocketAddress())
                 .usePlaintext()
                 .build();
@@ -113,7 +124,10 @@ public class RideClient {
     }
 
     public void forwardElected(Elected request) {
-        TaxiBean nextTaxi = taxi.getNextTaxi();
+        TaxiBean nextTaxi = getNextTaxi(request);
+        if (nextTaxi == null)
+            return;
+
         final ManagedChannel channel = ManagedChannelBuilder.forTarget(nextTaxi.computeSocketAddress())
                 .usePlaintext()
                 .build();
@@ -147,5 +161,23 @@ public class RideClient {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    private TaxiBean getNextTaxi(Ride ride) {
+        TaxiBean nextTaxi = taxi.getNextTaxi();
+        if (nextTaxi == null) {
+            System.out.println("No other taxis.");
+            RideUtils.electionMaster(taxi, ride);
+        }
+
+        return nextTaxi;
+    }
+
+    private TaxiBean getNextTaxi(Election request) {
+        return getNextTaxi(new Ride(request.getRide()));
+    }
+
+    private TaxiBean getNextTaxi(Elected request) {
+        return getNextTaxi(new Ride(request.getRideId()));
     }
 }

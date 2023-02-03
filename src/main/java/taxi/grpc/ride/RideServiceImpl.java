@@ -1,6 +1,5 @@
 package taxi.grpc.ride;
 
-import beans.Position;
 import com.seta.taxi.RideServiceGrpc.*;
 import com.seta.taxi.RideServiceOuterClass.*;
 import io.grpc.stub.StreamObserver;
@@ -8,6 +7,7 @@ import taxi.model.Ride;
 import taxi.model.RideCriteria;
 import taxi.model.RideElection;
 import taxi.model.Taxi;
+import utils.RideUtils;
 
 public class RideServiceImpl extends RideServiceImplBase {
     private final Taxi taxi;
@@ -18,17 +18,7 @@ public class RideServiceImpl extends RideServiceImplBase {
 
     @Override
     public void elect(Election request, StreamObserver<ElectionResponse> responseObserver) {
-        int rideId = request.getRide().getId();
-
-        int startX = request.getRide().getStartingPosition().getX();
-        int startY = request.getRide().getStartingPosition().getY();
-        Position startingPosition = new Position(startX, startY);
-
-        int destX = request.getRide().getDestinationPosition().getX();
-        int destY = request.getRide().getDestinationPosition().getY();
-        Position destinationPosition = new Position(destX, destY);
-
-        Ride ride = new Ride(rideId, startingPosition, destinationPosition);
+        Ride ride = new Ride(request.getRide());
 
         double otherDistance = request.getCriteria().getDistance();
         int otherBatteryLevel = request.getCriteria().getBatteryLevel();
@@ -52,7 +42,7 @@ public class RideServiceImpl extends RideServiceImplBase {
 
         RideElection rideElection = taxi.getRideElection(ride);
 
-        if (!taxi.isOtherTaxiPresent(otherTaxiId)) {
+        if (!taxi.isOtherTaxiPresent(otherTaxiId) && otherTaxiId != taxi.getId()) {
             System.out.println("[Taxi " + taxi.getId() + "] Taxi " + otherTaxiId + " is no longer present.");
             rideElection.startElection();
         }
@@ -85,10 +75,12 @@ public class RideServiceImpl extends RideServiceImplBase {
         responseObserver.onNext(response);
         responseObserver.onCompleted();
 
+        RideElection rideElection = taxi.getRideElection(rideId);
         if (taxiId != taxi.getId()) {
-            RideElection rideElection = taxi.getRideElection(rideId);
             rideElection.forwardElected(request);
             taxi.removeRideElection(rideElection);
         }
+        else
+            RideUtils.electionMaster(taxi, rideElection);
     }
 }
