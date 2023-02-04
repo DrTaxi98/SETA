@@ -17,10 +17,12 @@ public class NotifyQuitThread extends Thread {
 
     private final Taxi taxi;
     private final TaxiBean otherTaxi;
+    private final TaxiId request;
 
-    public NotifyQuitThread(Taxi taxi, TaxiBean otherTaxi) {
+    public NotifyQuitThread(Taxi taxi, TaxiBean otherTaxi, TaxiId request) {
         this.taxi = taxi;
         this.otherTaxi = otherTaxi;
+        this.request = request;
     }
 
     @Override
@@ -29,10 +31,6 @@ public class NotifyQuitThread extends Thread {
                 .usePlaintext()
                 .build();
         PresentationServiceStub stub = PresentationServiceGrpc.newStub(channel);
-
-        TaxiId request = TaxiId.newBuilder()
-                .setId(taxi.getId())
-                .build();
 
         System.out.println("[Taxi " + taxi.getId() + "] Notifying Taxi " + otherTaxi.getId());
 
@@ -51,6 +49,7 @@ public class NotifyQuitThread extends Thread {
             public void onError(Throwable throwable) {
                 System.out.println("Error! " + throwable.getMessage());
                 GrpcUtils.handleInactiveTaxi(taxi, otherTaxi.getId());
+                channel.shutdownNow();
             }
 
             public void onCompleted() {

@@ -2,10 +2,11 @@ package taxi.grpc.presentation;
 
 import beans.OtherTaxisSet;
 import beans.TaxiBean;
+import com.seta.taxi.PresentationServiceOuterClass.*;
 import taxi.model.Taxi;
 
 import java.util.ArrayList;
-import java.util.Set;
+import java.util.SortedSet;
 
 public class PresentationClient {
 
@@ -16,10 +17,20 @@ public class PresentationClient {
     }
 
     public void present(OtherTaxisSet otherTaxisSet) {
-        Set<TaxiBean> otherTaxis = otherTaxisSet.getOtherTaxis();
+        TaxiPresentation request = TaxiPresentation.newBuilder()
+                .setId(taxi.getId())
+                .setIpAddress(taxi.getIpAddress())
+                .setPortNumber(taxi.getPortNumber())
+                .setPosition(TaxiPresentation.Position.newBuilder()
+                        .setX(taxi.getPosition().getX())
+                        .setY(taxi.getPosition().getY())
+                        .build())
+                .build();
+
+        SortedSet<TaxiBean> otherTaxis = otherTaxisSet.getOtherTaxis();
         ArrayList<Thread> threads = new ArrayList<>();
         for (TaxiBean otherTaxi : otherTaxis) {
-            PresentThread presentThread = new PresentThread(taxi, otherTaxi);
+            PresentThread presentThread = new PresentThread(taxi, otherTaxi, request);
             threads.add(presentThread);
             presentThread.start();
         }
@@ -34,10 +45,14 @@ public class PresentationClient {
     }
 
     public void notifyQuit(OtherTaxisSet otherTaxisSet) {
-        Set<TaxiBean> otherTaxis = otherTaxisSet.getOtherTaxis();
+        TaxiId request = TaxiId.newBuilder()
+                .setId(taxi.getId())
+                .build();
+
+        SortedSet<TaxiBean> otherTaxis = otherTaxisSet.getOtherTaxis();
         ArrayList<Thread> threads = new ArrayList<>();
         for (TaxiBean otherTaxi : otherTaxis) {
-            NotifyQuitThread notifyQuitThread = new NotifyQuitThread(taxi, otherTaxi);
+            NotifyQuitThread notifyQuitThread = new NotifyQuitThread(taxi, otherTaxi, request);
             threads.add(notifyQuitThread);
             notifyQuitThread.start();
         }

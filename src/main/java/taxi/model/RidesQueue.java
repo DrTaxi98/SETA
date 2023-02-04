@@ -29,6 +29,6 @@ public class RidesQueue {
 
     public synchronized void shutdown() {
         shutdownRequested = true;
-        notify();
+        notifyAll();
     }
 }

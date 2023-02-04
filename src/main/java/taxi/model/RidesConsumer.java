@@ -21,7 +21,10 @@ public class RidesConsumer extends Thread {
     }
 
     public void consume(RideRequest rideRequest) {
-        taxi.getRideElection(rideRequest).startElection();
+        if (taxi.getStatus() == Taxi.Status.AVAILABLE) {
+            taxi.setStatus(Taxi.Status.ELECTING);
+            taxi.getRideElection(rideRequest).startElection();
+        }
     }
 
     public void shutdown() {

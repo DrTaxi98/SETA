@@ -1,2 +1,26 @@
 syntax = "proto3";
 package com.seta.taxi;
+
+message Recharge {
+  uint32 district = 1;
+  uint32 taxiId = 2;
+  uint64 timestamp = 3;
+}
+
+message RechargeOk {
+  uint32 taxiId = 1;
+}
+
+message LamportRequest {
+  uint32 startTaxiId = 1;
+  uint64 timestamp = 2;
+}
+
+message Timestamp {
+  uint64 timestamp = 1;
+}
+
+service RechargeService {
+  rpc recharge(Recharge) returns (RechargeOk);
+  rpc lamport(LamportRequest) returns (Timestamp);
+}

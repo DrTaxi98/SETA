@@ -82,6 +82,7 @@ public class RideClient {
                     System.out.println("[Taxi " + taxi.getId() + "] Error! " + throwable.getMessage());
                     GrpcUtils.handleInactiveTaxi(taxi, nextTaxi.getId());
                     forwardElection(request);
+                    channel.shutdownNow();
                 }
 
                 public void onCompleted() {
@@ -149,6 +150,7 @@ public class RideClient {
                     System.out.println("[Taxi " + taxi.getId() + "] Error! " + throwable.getMessage());
                     GrpcUtils.handleInactiveTaxi(taxi, nextTaxi.getId());
                     forwardElected(request);
+                    channel.shutdownNow();
                 }
 
                 public void onCompleted() {

@@ -17,10 +17,12 @@ public class PresentThread extends Thread {
 
     private final Taxi taxi;
     private final TaxiBean otherTaxi;
+    private final TaxiPresentation request;
 
-    public PresentThread(Taxi taxi, TaxiBean otherTaxi) {
+    public PresentThread(Taxi taxi, TaxiBean otherTaxi, TaxiPresentation request) {
         this.taxi = taxi;
         this.otherTaxi = otherTaxi;
+        this.request = request;
     }
 
     @Override
@@ -29,16 +31,6 @@ public class PresentThread extends Thread {
                 .usePlaintext()
                 .build();
         PresentationServiceStub stub = PresentationServiceGrpc.newStub(channel);
-
-        TaxiPresentation request = TaxiPresentation.newBuilder()
-                .setId(taxi.getId())
-                .setIpAddress(taxi.getIpAddress())
-                .setPortNumber(taxi.getPortNumber())
-                .setPosition(TaxiPresentation.Position.newBuilder()
-                        .setX(taxi.getPosition().getX())
-                        .setY(taxi.getPosition().getY())
-                        .build())
-                .build();
 
         System.out.println("[Taxi " + taxi.getId() + "] Presenting to Taxi " + otherTaxi.getId());
 
@@ -57,6 +49,7 @@ public class PresentThread extends Thread {
             public void onError(Throwable throwable) {
                 System.out.println("Error! " + throwable.getMessage());
                 GrpcUtils.handleInactiveTaxi(taxi, otherTaxi.getId());
+                channel.shutdownNow();
             }
 
             public void onCompleted() {

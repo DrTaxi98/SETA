@@ -6,15 +6,13 @@ import taxi.model.RideRequest;
 import taxi.model.RidesQueue;
 import utils.MqttUtils;
 
-import java.sql.Timestamp;
-
 public class TaxiMqttClient {
 
     private static final String BROKER = "tcp://localhost:1883";
     private static final String SUB_TOPIC_PREFIX = "seta/smartcity/rides/district";
     private static final int SUB_QOS = 2;
-    private static final String PUB_RIDE_TOPIC = "seta/smartcity/rides/retained";
-    private static final String PUB_AVAILABILITY_TOPIC = "seta/smartcity/taxis/available";
+    private static final String PUB_ACCOMPLISHED_TOPIC = "seta/smartcity/rides/accomplished";
+    private static final String PUB_AVAILABILE_TOPIC = "seta/smartcity/taxis/available";
     private static final int PUB_QOS = 2;
 
     private MqttClient client;
@@ -70,20 +68,20 @@ public class TaxiMqttClient {
         MqttUtils.unsubscribe(client, getSubTopic());
     }
 
-    public void publishRide(RideRequest rideRequest) {
+    public void publishAccomplished(RideRequest rideRequest) {
         String payload = gson.toJson(rideRequest);
         MqttMessage message = new MqttMessage(payload.getBytes());
 
-        System.out.println("Publishing " + rideRequest);
-        MqttUtils.publish(client, message, PUB_RIDE_TOPIC, PUB_QOS);
+        System.out.println("Publishing accomplished " + rideRequest);
+        MqttUtils.publish(client, message, PUB_ACCOMPLISHED_TOPIC, PUB_QOS);
     }
 
-    public void publishAvailability(int district) {
+    public void publishAvailable(int district) {
         String payload = gson.toJson(district);
         MqttMessage message = new MqttMessage(payload.getBytes());
 
         System.out.println("Publishing availability in district: " + district);
-        MqttUtils.publish(client, message, PUB_AVAILABILITY_TOPIC, PUB_QOS);
+        MqttUtils.publish(client, message, PUB_AVAILABILE_TOPIC, PUB_QOS);
     }
 
     public void disconnect() {

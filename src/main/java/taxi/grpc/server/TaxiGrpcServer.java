@@ -3,6 +3,7 @@ package taxi.grpc.server;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import taxi.grpc.presentation.PresentationServiceImpl;
+import taxi.grpc.recharge.RechargeServiceImpl;
 import taxi.grpc.ride.RideServiceImpl;
 import taxi.model.Taxi;
 
@@ -16,6 +17,7 @@ public class TaxiGrpcServer extends Thread {
         server = ServerBuilder.forPort(taxi.getPortNumber())
                 .addService(new PresentationServiceImpl(taxi))
                 .addService(new RideServiceImpl(taxi))
+                .addService(new RechargeServiceImpl(taxi))
                 .build();
     }
 

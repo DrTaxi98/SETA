@@ -106,4 +106,15 @@ public class LocalStatistics implements Comparable<LocalStatistics> {
             return compareTimestamp;
         return Integer.compare(taxiId, o.taxiId);
     }
+
+    @Override
+    public String toString() {
+        return "Local statistics:" +
+                "\n\tTaxi ID = " + taxiId +
+                "\n\tTimestamp = " + timestamp +
+                "\n\tBattery level = " + batteryLevel +
+                "\n\tTravelled kilometres = " + travelledKms +
+                "\n\tAccomplished rides = " + accomplishedRides +
+                "\n\tPollution averages = " + pollutionAverages;
+    }
 }

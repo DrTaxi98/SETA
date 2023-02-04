@@ -16,8 +16,8 @@ public class Seta {
     private static final String CLIENT_ID = MqttClient.generateClientId();
     private static final String PUB_TOPIC_PREFIX = "seta/smartcity/rides/district";
     private static final int PUB_QOS = 2;
-    private static final String SUB_RIDE_TOPIC = "seta/smartcity/rides/retained";
-    private static final String SUB_AVAILABILITY_TOPIC = "seta/smartcity/taxis/available";
+    private static final String SUB_ACCOMPLISHED_TOPIC = "seta/smartcity/rides/accomplished";
+    private static final String SUB_AVAILABILE_TOPIC = "seta/smartcity/taxis/available";
     private static final int SUB_QOS = 2;
     private static int RIDE_ID = 0;
     private static final Gson gson = new Gson();
@@ -31,10 +31,10 @@ public class Seta {
             client.setCallback(new MqttCallback() {
 
                 public void messageArrived(String topic, MqttMessage message) {
-                    if (topic.equals(SUB_RIDE_TOPIC)) {
+                    if (topic.equals(SUB_ACCOMPLISHED_TOPIC)) {
                         RideRequest rideRequest = MqttUtils.rideRequestArrived(CLIENT_ID, topic, message);
                         int district = rideRequest.getStartingPosition().getDistrict();
-                        retainedRides.get(district).add(rideRequest);
+                        retainedRides.get(district).remove(rideRequest);
                         printRetainedRides();
                     }
                     else {
@@ -52,7 +52,7 @@ public class Seta {
 
                         RetainedRidesQueue retainedRidesQueue = retainedRides.get(district);
                         System.out.println("District " + district + ' ' + retainedRidesQueue);
-                        RideRequest rideRequest = retainedRidesQueue.removeFirst();
+                        RideRequest rideRequest = retainedRidesQueue.getFirst();
                         if (rideRequest != null)
                             publish(client, rideRequest);
                     }
@@ -73,13 +73,12 @@ public class Seta {
             for (int i = 0; i < SmartCityUtils.DISTRICTS; i++)
                 retainedRides.put(i + 1, new RetainedRidesQueue());
 
-            MqttUtils.subscribe(client, SUB_RIDE_TOPIC, SUB_QOS);
-            MqttUtils.subscribe(client, SUB_AVAILABILITY_TOPIC, SUB_QOS);
+            MqttUtils.subscribe(client, SUB_ACCOMPLISHED_TOPIC, SUB_QOS);
+            MqttUtils.subscribe(client, SUB_AVAILABILE_TOPIC, SUB_QOS);
 
             while (client.isConnected()) {
                 for (int i = 0; i < 2; i++)
                     generateAndPublish(client);
-
                 try {
                     Thread.sleep(5000);
                 } catch (InterruptedException e) {
@@ -96,6 +95,9 @@ public class Seta {
     private static void generateAndPublish(MqttClient client) {
         RideRequest rideRequest = SmartCityUtils.randomRide(RIDE_ID++);
         System.out.println(CLIENT_ID + " Generated " + rideRequest);
+
+        int district = rideRequest.getStartingPosition().getDistrict();
+        retainedRides.get(district).add(rideRequest);
 
         publish(client, rideRequest);
     }

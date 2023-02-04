@@ -1,9 +1,7 @@
 package taxi.model;
 
-import beans.OtherTaxisSet;
-import beans.Position;
-import beans.TaxiBean;
-import beans.TaxiStartInfo;
+import beans.*;
+import com.seta.taxi.RechargeServiceOuterClass.*;
 import exceptions.RestException;
 import taxi.grpc.presentation.PresentationClient;
 import taxi.grpc.recharge.RechargeClient;
@@ -14,16 +12,28 @@ import taxi.rest.TaxiRestClient;
 import taxi.simulators.PM10Simulator;
 import taxi.simulators.Simulator;
 import taxi.simulators.SlidingWindow;
+import taxi.statistics.SensorReader;
 import taxi.statistics.StatisticsComputer;
 import utils.SmartCityUtils;
 import utils.StringUtils;
 
 import java.io.IOException;
+import java.util.Random;
 
 public class Taxi {
 
-    private static final int RIDE_TIME = 5000;
-    private static final int RECHARGE_TIME = 10000;
+    public enum Status {
+        AVAILABLE,
+        ELECTING,
+        RIDING,
+        TRYING_TO_RECHARGE,
+        RECHARGING
+    }
+
+    private volatile Status status = Status.AVAILABLE;
+
+    private static final long RIDE_TIME = 5000;
+    public static final long RECHARGE_TIME = 10000;
 
     private final int id;
     private final String ipAddress;
@@ -37,15 +47,19 @@ public class Taxi {
     private final TaxiGrpcServer grpcServer = new TaxiGrpcServer(this);
     private final PresentationClient presentationClient = new PresentationClient(this);
     private final RideClient rideClient = new RideClient(this);
-    private final RechargeClient rechargeClient = new RechargeClient(this);
-    private final Simulator pollutionSensor = new PM10Simulator(new SlidingWindow());
-    private final StatisticsComputer statisticsComputer = new StatisticsComputer();
     private final RidesQueue ridesQueue = new RidesQueue();
     private final RideElectionsSet rideElectionsSet = new RideElectionsSet();
     private final RidesConsumer ridesConsumer = new RidesConsumer(this, ridesQueue);
+    private final RechargeClient rechargeClient = new RechargeClient(this);
+    private Recharge rechargeRequest = null;
+    private final RechargeQueue rechargeQueue = new RechargeQueue();
+    private final SlidingWindow slidingWindow = new SlidingWindow();
+    private final Simulator pollutionSensor = new PM10Simulator(slidingWindow);
+    private final StatisticsComputer statisticsComputer = new StatisticsComputer(this);
+    private final SensorReader sensorReader = new SensorReader(statisticsComputer, slidingWindow);
     private final TaxiMqttClient mqttClient = new TaxiMqttClient(ridesQueue);
 
-    private volatile boolean available = true;
+    private long offset;
 
     public Taxi(int id, String ipAddress, int portNumber, String administratorServerAddress) {
         this.id = id;
@@ -53,6 +67,20 @@ public class Taxi {
         this.portNumber = portNumber;
         restClient = new TaxiRestClient(administratorServerAddress);
         batteryLevel = 100;
+        offset = new Random().nextLong();
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public synchronized void setStatusAvailable() {
+        setStatus(Status.AVAILABLE);
+        publishAvailable();
     }
 
     public int getId() {
@@ -71,11 +99,16 @@ public class Taxi {
         return StringUtils.getSocketAddress(ipAddress, portNumber);
     }
 
+    public TaxiBean getTaxiBean() {
+        return new TaxiBean(id, ipAddress, portNumber);
+    }
+
     public int getBatteryLevel() {
         return batteryLevel;
     }
 
-    private void consumeBatteryLevel(double kms) {
+    private void travelKms(double kms) {
+        statisticsComputer.addTravelledKms(kms);
         batteryLevel = (int) Math.max(batteryLevel - kms, 0);
         if (batteryLevel < 30)
             tryToRecharge();
@@ -135,22 +168,53 @@ public class Taxi {
         rideElectionsSet.remove(rideElection);
     }
 
-    public boolean isAvailable() {
-        return available;
+    public long getTimestamp() {
+        return System.currentTimeMillis() + offset;
     }
 
-    private synchronized void setAvailable(boolean available) {
-        this.available = available;
-        if (available)
-            publishAvailability();
+    public void adjustTimestamp(long thisTimestamp, long otherTimestamp) {
+        System.out.println("[Taxi " + id + "] This timestamp: " + thisTimestamp +
+                "\nReceived timestamp: " + otherTimestamp);
+
+        long adjustedTimestamp = Math.max(thisTimestamp, otherTimestamp + 1);
+        System.out.println("[Taxi " + id + "] Adjusted timestamp: " + adjustedTimestamp);
+
+        long offsetAdjustment = adjustedTimestamp - thisTimestamp;
+        offset += offsetAdjustment;
     }
 
-    public void publishRide(RideRequest rideRequest) {
-        mqttClient.publishRide(rideRequest);
+    public void publishAccomplished(RideRequest rideRequest) {
+        mqttClient.publishAccomplished(rideRequest);
     }
 
-    private void publishAvailability() {
-        mqttClient.publishAvailability(getDistrict());
+    private void publishAvailable() {
+        mqttClient.publishAvailable(getDistrict());
+    }
+
+    public Recharge getRechargeRequest() {
+        return rechargeRequest;
+    }
+
+    public void setRechargeRequest(Recharge rechargeRequest) {
+        this.rechargeRequest = rechargeRequest;
+    }
+
+    public void addRechargeRequest(Recharge rechargeRequest) {
+        rechargeQueue.add(rechargeRequest);
+    }
+
+    public void waitForRecharged() {
+        rechargeQueue.waitForRecharged();
+    }
+
+    public void sendStatistics(LocalStatistics stats) {
+        try {
+            System.out.println("Sending statistics...");
+            restClient.addStatistics(stats);
+            System.out.println("Statistics sent.");
+        } catch (RestException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     public void start() throws IOException, RestException {
@@ -171,6 +235,10 @@ public class Taxi {
         System.out.println("Starting statistics computer...");
         statisticsComputer.start();
         System.out.println("Statistics computer started.");
+
+        System.out.println("Starting sensor reader...");
+        sensorReader.start();
+        System.out.println("Sensor reader started.");
 
         System.out.println("Presenting to other taxis...");
         presentationClient.present(otherTaxisSet);
@@ -193,7 +261,7 @@ public class Taxi {
     }
 
     public synchronized void accomplishRide(RideRequest rideRequest) {
-        setAvailable(false);
+        status = Status.RIDING;
 
         try {
             System.out.println(this +
@@ -207,9 +275,6 @@ public class Taxi {
         Position startingPosition = rideRequest.getStartingPosition();
         Position destinationPosition = rideRequest.getDestinationPosition();
 
-        double kms = position.distanceFrom(startingPosition) + rideRequest.getDistance();
-        consumeBatteryLevel(kms);
-
         position = destinationPosition;
         System.out.println(this);
 
@@ -220,18 +285,21 @@ public class Taxi {
             mqttClient.subscribe(destinationDistrict);
         }
 
-        setAvailable(true);
+        statisticsComputer.incrementAccomplishedRides();
+        publishAccomplished(rideRequest);
+        setStatusAvailable();
+        travelKms(position.distanceFrom(startingPosition) + rideRequest.getDistance());
     }
 
     public synchronized void tryToRecharge() {
-        setAvailable(false);
+        status = Status.TRYING_TO_RECHARGE;
         rechargeClient.recharge();
     }
 
     public synchronized void recharge() {
+        status = Status.RECHARGING;
         Position rechargingStation = SmartCityUtils.getRechargingStation(position.getDistrict());
-        double kms = position.distanceFrom(rechargingStation);
-        consumeBatteryLevel(kms);
+        travelKms(position.distanceFrom(rechargingStation));
         position = rechargingStation;
 
         try {
@@ -245,8 +313,12 @@ public class Taxi {
         batteryLevel = 100;
         System.out.println(this);
 
-        rechargeClient.stopRecharging();
-        setAvailable(true);
+        rechargeQueue.setRecharged();
+        setStatusAvailable();
+    }
+
+    public void lamport(int startTaxiId) {
+        rechargeClient.lamport(startTaxiId);
     }
 
     public synchronized void quit() {
@@ -255,6 +327,10 @@ public class Taxi {
         System.out.println("Shutting down ride consumer...");
         ridesConsumer.shutdown();
         System.out.println("Ride consumer shut down.");
+
+        System.out.println("Shutting down sensor reader...");
+        sensorReader.shutdown();
+        System.out.println("Sensor reader shut down.");
 
         System.out.println("Shutting down statistics computer...");
         statisticsComputer.shutdown();

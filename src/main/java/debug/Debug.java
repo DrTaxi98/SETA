@@ -2,12 +2,13 @@ package debug;
 
 public class Debug {
 
-    public static final boolean SLEEP = false;
+    private static final boolean SLEEP = false;
+    private static final long MILLIS = 5000;
 
     public static void sleep() {
         if (SLEEP)
             try {
-                Thread.sleep(10000);
+                Thread.sleep(MILLIS);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

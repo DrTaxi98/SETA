@@ -19,6 +19,9 @@ public class RideServiceImpl extends RideServiceImplBase {
 
     @Override
     public void elect(Election request, StreamObserver<ElectionResponse> responseObserver) {
+        if (taxi.getStatus() == Taxi.Status.AVAILABLE)
+            taxi.setStatus(Taxi.Status.ELECTING);
+
         System.out.println("[Taxi " + taxi.getId() + "] Received ELECTION message:" +
                 '\n' + RideUtils.toString(request));
 
@@ -35,7 +38,7 @@ public class RideServiceImpl extends RideServiceImplBase {
 
         int district = taxi.getDistrict();
         boolean inRideDistrict = taxi.isInDistrict(rideRequest);
-        boolean available = taxi.isAvailable();
+        boolean available = taxi.getStatus() == Taxi.Status.ELECTING;
         RideUtils.printDistrictAndAvailability(taxi, district, inRideDistrict, available);
 
         RideCriteria rideCriteria = taxi.getRideCriteria(rideRequest);
@@ -82,13 +85,14 @@ public class RideServiceImpl extends RideServiceImplBase {
                 electedTaxiId != taxi.getId() &&
                 !taxi.isPresentRideElection(rideRequest)) {
             System.out.println("[Taxi " + taxi.getId() + "]" + "Taxi " + electedTaxiId + " is no longer present.");
-            taxi.publishRide(rideRequest);
+            taxi.setStatus(Taxi.Status.AVAILABLE);
         }
         else {
             RideElection rideElection = taxi.getRideElection(rideRequest);
             if (electedTaxiId != taxi.getId()) {
                 rideElection.forwardElected(request);
                 taxi.removeRideElection(rideElection);
+                taxi.setStatus(Taxi.Status.AVAILABLE);
             } else
                 RideUtils.electionMaster(taxi, rideElection);
         }

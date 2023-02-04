@@ -20,11 +20,15 @@ public class RetainedRidesQueue {
         return retainedRides.add(rideRequest);
     }
 
-    public synchronized RideRequest removeFirst() {
-        Debug.sleep();
-        if (!retainedRides.isEmpty())
-            return retainedRides.remove(0);
+    public RideRequest getFirst() {
+        List<RideRequest> rides = getRetainedRides();
+        if (rides.isEmpty())
+            return rides.get(0);
         return null;
+    }
+
+    public synchronized boolean remove(RideRequest rideRequest) {
+        return retainedRides.remove(rideRequest);
     }
 
     @Override
