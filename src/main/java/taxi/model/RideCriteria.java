@@ -1,5 +1,7 @@
 package taxi.model;
 
+import com.seta.taxi.RideServiceOuterClass.*;
+
 import java.util.Objects;
 
 public class RideCriteria implements Comparable<RideCriteria> {
@@ -12,6 +14,10 @@ public class RideCriteria implements Comparable<RideCriteria> {
         this.distance = distance;
         this.batteryLevel = batteryLevel;
         this.taxiId = taxiId;
+    }
+
+    public RideCriteria(Election.Criteria criteria) {
+        this(criteria.getDistance(), criteria.getBatteryLevel(), criteria.getTaxiId());
     }
 
     public double getDistance() {

@@ -1,19 +1,19 @@
 syntax = "proto3";
 package com.seta.taxi;
 
-message Election {
+message Ride {
+  uint32 id = 1;
 
-  message Ride {
-    uint32 id = 1;
-
-    message Position {
-      uint32 x = 1;
-      uint32 y = 2;
-    }
-
-    Position startingPosition = 2;
-    Position destinationPosition = 3;
+  message Position {
+    uint32 x = 1;
+    uint32 y = 2;
   }
+
+  Position startingPosition = 2;
+  Position destinationPosition = 3;
+}
+
+message Election {
 
   Ride ride = 1;
 
@@ -27,7 +27,7 @@ message Election {
 }
 
 message Elected {
-  uint32 rideId = 1;
+  Ride ride = 1;
   uint32 taxiId = 2;
 }
 

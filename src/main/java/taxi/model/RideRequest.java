@@ -5,28 +5,22 @@ import com.seta.taxi.RideServiceOuterClass.*;
 
 import java.util.Objects;
 
-public class Ride {
+public class RideRequest {
 
     private final int id;
     private final Position startingPosition;
     private final Position destinationPosition;
 
-    public Ride(int id) {
-        this.id = id;
-        startingPosition = new Position();
-        destinationPosition = new Position();
-    }
-
-    public Ride(int id, Position startingPosition, Position destinationPosition) {
+    public RideRequest(int id, Position startingPosition, Position destinationPosition) {
         this.id = id;
         this.startingPosition = startingPosition;
         this.destinationPosition = destinationPosition;
     }
 
-    public Ride(Election.Ride ride) {
-        id = ride.getId();
-        startingPosition = new Position(ride.getStartingPosition());
-        destinationPosition = new Position(ride.getDestinationPosition());
+    public RideRequest(Ride ride) {
+        this(ride.getId(),
+                new Position(ride.getStartingPosition()),
+                new Position(ride.getDestinationPosition()));
     }
 
     public int getId() {
@@ -49,8 +43,8 @@ public class Ride {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Ride ride = (Ride) o;
-        return id == ride.id;
+        RideRequest rideRequest = (RideRequest) o;
+        return id == rideRequest.id;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package beans;
 
+import com.seta.taxi.PresentationServiceOuterClass.*;
 import com.seta.taxi.RideServiceOuterClass.*;
 import utils.SmartCityUtils;
 
@@ -21,9 +22,12 @@ public class Position {
         this.y = y;
     }
 
-    public Position(Election.Ride.Position position) {
-        x = position.getX();
-        y = position.getY();
+    public Position(TaxiPresentation.Position position) {
+        this(position.getX(), position.getY());
+    }
+
+    public Position(Ride.Position position) {
+        this(position.getX(), position.getY());
     }
 
     public int getX() {

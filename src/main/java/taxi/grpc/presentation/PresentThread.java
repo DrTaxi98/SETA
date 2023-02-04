@@ -4,10 +4,12 @@ import beans.TaxiBean;
 import com.seta.taxi.PresentationServiceGrpc;
 import com.seta.taxi.PresentationServiceGrpc.*;
 import com.seta.taxi.PresentationServiceOuterClass.*;
+import debug.Debug;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 import taxi.model.Taxi;
+import utils.GrpcUtils;
 
 import java.util.concurrent.TimeUnit;
 
@@ -38,18 +40,23 @@ public class PresentThread extends Thread {
                         .build())
                 .build();
 
+        System.out.println("[Taxi " + taxi.getId() + "] Presenting to Taxi " + otherTaxi.getId());
+
+        Debug.sleep();
+
         stub.present(request, new StreamObserver<TaxiResponse>() {
 
             public void onNext(TaxiResponse taxiResponse) {
                 int id = taxiResponse.getId();
                 if (taxiResponse.getOk())
-                    System.out.println("Taxi " + id + " accepted the presentation.");
+                    System.out.println("[Taxi " + taxi.getId() + "] Taxi " + id + " accepted the presentation.");
                 else
-                    System.out.println("Taxi " + id + " did not accept the presentation.");
+                    System.out.println("[Taxi " + taxi.getId() + "] Taxi " + id + " did not accept the presentation.");
             }
 
             public void onError(Throwable throwable) {
                 System.out.println("Error! " + throwable.getMessage());
+                GrpcUtils.handleInactiveTaxi(taxi, otherTaxi.getId());
             }
 
             public void onCompleted() {

@@ -22,8 +22,9 @@ public class TaxiClient {
         Random random = new Random();
         int id = random.nextInt(MAX_TAXI);
 
+        System.out.println("Initializing Taxi " + id);
         Taxi taxi = new Taxi(id, IP_ADDRESS, PORT_NUMBER, ADMINISTRATOR_SERVER_ADDRESS);
-        System.out.println("Taxi initialized.");
+        System.out.println("Taxi " + id + " initialized.");
 
         try {
             taxi.start();
@@ -32,7 +33,6 @@ public class TaxiClient {
             System.out.println("Stopping taxi client...");
             return;
         } catch (RestException e) {
-            System.out.println(e.getMessage());
             System.out.println("Stopping taxi client...");
             return;
         }
@@ -47,7 +47,7 @@ public class TaxiClient {
                     "\n");
             command = scanner.nextLine();
             if (command.equalsIgnoreCase(RECHARGE_STRING))
-                taxi.recharge();
+                taxi.tryToRecharge();
             else if (!command.equalsIgnoreCase(QUIT_STRING)) {
                 System.out.println("Invalid command: \"" + command + '\"');
             }

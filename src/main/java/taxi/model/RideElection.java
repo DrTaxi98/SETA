@@ -7,28 +7,29 @@ import java.util.Objects;
 
 public class RideElection {
 
-    private final Ride ride;
+    private final RideRequest rideRequest;
     private final RideClient rideClient;
-    private boolean participant = false;
+    private volatile boolean participant = false;
 
-    public RideElection(Ride ride, RideClient rideClient) {
-        this.ride = ride;
+    public RideElection(RideRequest rideRequest, RideClient rideClient) {
+        this.rideRequest = rideRequest;
         this.rideClient = rideClient;
     }
 
-    public Ride getRide() {
-        return ride;
+    public RideRequest getRideRequest() {
+        return rideRequest;
     }
 
     public void startElection() {
+        System.out.println("Starting Ride " + rideRequest.getId() + " election...");
         participant = true;
-        rideClient.sendElection(ride);
+        rideClient.sendElection(rideRequest);
     }
 
     public void sendElection() {
         if (!participant) {
             participant = true;
-            rideClient.sendElection(ride);
+            rideClient.sendElection(rideRequest);
         }
     }
 
@@ -38,12 +39,12 @@ public class RideElection {
     }
 
     public void sendElected() {
-        participant = false;
-        rideClient.sendElected(ride);
+        //participant = false;
+        rideClient.sendElected(rideRequest);
     }
 
     public void forwardElected(Elected elected) {
-        participant = false;
+        //participant = false;
         rideClient.forwardElected(elected);
     }
 
@@ -52,11 +53,11 @@ public class RideElection {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         RideElection that = (RideElection) o;
-        return Objects.equals(ride, that.ride);
+        return Objects.equals(rideRequest, that.rideRequest);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ride);
+        return Objects.hash(rideRequest);
     }
 }

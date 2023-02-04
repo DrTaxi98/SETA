@@ -2,7 +2,7 @@ package taxi.mqtt;
 
 import com.google.gson.Gson;
 import org.eclipse.paho.client.mqttv3.*;
-import taxi.model.Ride;
+import taxi.model.RideRequest;
 import taxi.model.RidesQueue;
 import utils.MqttUtils;
 
@@ -13,6 +13,9 @@ public class TaxiMqttClient {
     private static final String BROKER = "tcp://localhost:1883";
     private static final String SUB_TOPIC_PREFIX = "seta/smartcity/rides/district";
     private static final int SUB_QOS = 2;
+    private static final String PUB_RIDE_TOPIC = "seta/smartcity/rides/retained";
+    private static final String PUB_AVAILABILITY_TOPIC = "seta/smartcity/taxis/available";
+    private static final int PUB_QOS = 2;
 
     private MqttClient client;
     private final String clientId = MqttClient.generateClientId();
@@ -36,19 +39,8 @@ public class TaxiMqttClient {
             client.setCallback(new MqttCallback() {
 
                 public void messageArrived(String topic, MqttMessage message) {
-                    String time = new Timestamp(System.currentTimeMillis()).toString();
-                    String payload = new String(message.getPayload());
-                    Ride ride = gson.fromJson(payload, Ride.class);
-
-                    System.out.println(clientId + " Received a message! - Callback - Thread PID: " +
-                            Thread.currentThread().getId() +
-                            "\nTime: " + time +
-                            "\nTopic: " + topic +
-                            "\nQoS: " + message.getQos() +
-                            "\nMessage: " + ride +
-                            '\n');
-
-                    ridesQueue.put(ride);
+                    RideRequest rideRequest = MqttUtils.rideRequestArrived(clientId, topic, message);
+                    ridesQueue.put(rideRequest);
                 }
 
                 public void connectionLost(Throwable cause) {
@@ -56,7 +48,11 @@ public class TaxiMqttClient {
                             " - Thread PID: " + Thread.currentThread().getId());
                 }
 
-                public void deliveryComplete(IMqttDeliveryToken token) {}
+                public void deliveryComplete(IMqttDeliveryToken token) {
+                    if (token.isComplete())
+                        System.out.println(clientId + " Message delivered - Thread PID: " +
+                                Thread.currentThread().getId());
+                }
             });
 
             subscribe(district);
@@ -67,36 +63,30 @@ public class TaxiMqttClient {
 
     public void subscribe(int district) {
         this.district = district;
-        String subTopic = getSubTopic();
-        System.out.println(clientId + " Subscribing to topic: " + subTopic);
-        try {
-            client.subscribe(subTopic, SUB_QOS);
-            System.out.println(clientId + " Subscribed - Thread PID: " + Thread.currentThread().getId());
-        } catch (MqttException me) {
-            MqttUtils.printMqttException(me);
-        }
+        MqttUtils.subscribe(client, getSubTopic(), SUB_QOS);
     }
 
     public void unsubscribe() {
-        String subTopic = getSubTopic();
-        System.out.println(clientId + " Unsubscribing from topic: " + subTopic);
-        try {
-            client.unsubscribe(subTopic);
-            System.out.println(clientId + " Unsubscribed - Thread PID: " + Thread.currentThread().getId());
-        } catch (MqttException me) {
-            MqttUtils.printMqttException(me);
-        }
+        MqttUtils.unsubscribe(client, getSubTopic());
+    }
+
+    public void publishRide(RideRequest rideRequest) {
+        String payload = gson.toJson(rideRequest);
+        MqttMessage message = new MqttMessage(payload.getBytes());
+
+        System.out.println("Publishing " + rideRequest);
+        MqttUtils.publish(client, message, PUB_RIDE_TOPIC, PUB_QOS);
+    }
+
+    public void publishAvailability(int district) {
+        String payload = gson.toJson(district);
+        MqttMessage message = new MqttMessage(payload.getBytes());
+
+        System.out.println("Publishing availability in district: " + district);
+        MqttUtils.publish(client, message, PUB_AVAILABILITY_TOPIC, PUB_QOS);
     }
 
     public void disconnect() {
-        if (client.isConnected()) {
-            System.out.println(clientId + " Disconnecting...");
-            try {
-                client.disconnect();
-                System.out.println(clientId + " Disconnected - Thread PID: " + Thread.currentThread().getId());
-            } catch (MqttException me) {
-                MqttUtils.printMqttException(me);
-            }
-        }
+        MqttUtils.disconnect(client);
     }
 }

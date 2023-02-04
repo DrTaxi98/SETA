@@ -1,6 +1,5 @@
 package taxi.model;
 
-import beans.Position;
 import debug.Debug;
 import taxi.grpc.ride.RideClient;
 
@@ -16,40 +15,41 @@ public class RideElectionsSet {
         return new HashSet<>(rideElections);
     }
 
-    private synchronized boolean add(RideElection rideElection) {
+    private synchronized void add(RideElection rideElection) {
         Debug.sleep();
-        return rideElections.add(rideElection);
+        rideElections.add(rideElection);
     }
 
-    private RideElection get(Ride ride) {
+    private RideElection get(RideRequest rideRequest) {
         Set<RideElection> rideElections = getRideElections();
         for (RideElection rideElection : rideElections) {
-            if (rideElection.getRide().equals(ride))
+            if (rideElection.getRideRequest().equals(rideRequest))
                 return rideElection;
         }
 
         return null;
     }
 
-    public synchronized RideElection getOrAdd(Ride ride, RideClient rideClient) {
+    public synchronized RideElection getOrAdd(RideRequest rideRequest, RideClient rideClient) {
         Debug.sleep();
 
-        RideElection rideElection = get(ride);
+        RideElection rideElection = get(rideRequest);
         if (rideElection == null) {
-            rideElection = new RideElection(ride, rideClient);
+            rideElection = new RideElection(rideRequest, rideClient);
             add(rideElection);
         }
 
         return rideElection;
     }
 
-    public RideElection getOrAdd(int rideId, RideClient rideClient) {
-        Ride ride = new Ride(rideId);
-        return getOrAdd(ride, rideClient);
+    public boolean contains(RideRequest rideRequest) {
+        Set<RideElection> rideElections = getRideElections();
+        return rideElections.stream()
+                .anyMatch(rideElection -> rideElection.getRideRequest().equals(rideRequest));
     }
 
-    public synchronized boolean remove(RideElection rideElection) {
+    public synchronized void remove(RideElection rideElection) {
         Debug.sleep();
-        return rideElections.remove(rideElection);
+        rideElections.remove(rideElection);
     }
 }

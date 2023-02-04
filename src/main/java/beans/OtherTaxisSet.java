@@ -6,7 +6,6 @@ import utils.StringUtils;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -65,6 +64,6 @@ public class OtherTaxisSet {
     @Override
     public String toString() {
         return "Other taxis:\n\t\t" +
-                StringUtils.taxisSetToString(otherTaxis, 2);
+                StringUtils.taxisSetToString(getOtherTaxis(), 2);
     }
 }

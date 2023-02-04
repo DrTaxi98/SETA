@@ -59,6 +59,6 @@ public class TaxisSet {
     @Override
     public String toString() {
         return "Taxis list:\n\t" +
-                StringUtils.taxisSetToString(taxis, 1);
+                StringUtils.taxisSetToString(getTaxis(), 1);
     }
 }

@@ -45,7 +45,7 @@ public class Taxi {
     private final RidesConsumer ridesConsumer = new RidesConsumer(this, ridesQueue);
     private final TaxiMqttClient mqttClient = new TaxiMqttClient(ridesQueue);
 
-    private boolean available = true;
+    private volatile boolean available = true;
 
     public Taxi(int id, String ipAddress, int portNumber, String administratorServerAddress) {
         this.id = id;
@@ -77,14 +77,20 @@ public class Taxi {
 
     private void consumeBatteryLevel(double kms) {
         batteryLevel = (int) Math.max(batteryLevel - kms, 0);
+        if (batteryLevel < 30)
+            tryToRecharge();
     }
 
     public Position getPosition() {
         return position;
     }
 
-    public boolean isInDistrict(Ride ride) {
-        return position.getDistrict() == ride.getStartingPosition().getDistrict();
+    public int getDistrict() {
+        return position.getDistrict();
+    }
+
+    public boolean isInDistrict(RideRequest rideRequest) {
+        return getDistrict() == rideRequest.getStartingPosition().getDistrict();
     }
 
     public OtherTaxisSet getOtherTaxisSet() {
@@ -99,8 +105,8 @@ public class Taxi {
         return otherTaxisSet.getNext(id);
     }
 
-    public boolean isOtherTaxiPresent(int id) {
-        return otherTaxisSet.isPresent(id);
+    public boolean isOtherTaxiAbsent(int id) {
+        return !otherTaxisSet.isPresent(id);
     }
 
     public boolean removeOtherTaxi(int id) {
@@ -112,31 +118,51 @@ public class Taxi {
         otherTaxisSet = startInfo.getOtherTaxisSet();
     }
 
-    public RideCriteria getRideCriteria(Ride ride) {
-        double distance = position.distanceFrom(ride.getStartingPosition());
+    public RideCriteria getRideCriteria(RideRequest rideRequest) {
+        double distance = position.distanceFrom(rideRequest.getStartingPosition());
         return new RideCriteria(distance, batteryLevel, id);
     }
 
-    public RideElection getRideElection(Ride ride) {
-        return rideElectionsSet.getOrAdd(ride, rideClient);
+    public RideElection getRideElection(RideRequest rideRequest) {
+        return rideElectionsSet.getOrAdd(rideRequest, rideClient);
     }
 
-    public RideElection getRideElection(int rideId) {
-        return rideElectionsSet.getOrAdd(rideId, rideClient);
+    public boolean isPresentRideElection(RideRequest rideRequest) {
+        return rideElectionsSet.contains(rideRequest);
     }
 
-    public boolean removeRideElection(RideElection rideElection) {
-        return rideElectionsSet.remove(rideElection);
+    public void removeRideElection(RideElection rideElection) {
+        rideElectionsSet.remove(rideElection);
     }
 
     public boolean isAvailable() {
         return available;
     }
 
+    private synchronized void setAvailable(boolean available) {
+        this.available = available;
+        if (available)
+            publishAvailability();
+    }
+
+    public void publishRide(RideRequest rideRequest) {
+        mqttClient.publishRide(rideRequest);
+    }
+
+    private void publishAvailability() {
+        mqttClient.publishAvailability(getDistrict());
+    }
+
     public void start() throws IOException, RestException {
         portNumber = grpcServer.startServer();
 
-        register();
+        try {
+            register();
+        } catch (RestException e) {
+            System.out.println(e.getMessage());
+            grpcServer.shutdown();
+            throw e;
+        }
 
         System.out.println("Starting pollution sensor...");
         pollutionSensor.start();
@@ -155,7 +181,7 @@ public class Taxi {
         System.out.println("Rides consumer started.");
 
         System.out.println("Starting MQTT client...");
-        mqttClient.start(position.getDistrict());
+        mqttClient.start(getDistrict());
     }
 
     private void register() throws RestException {
@@ -166,42 +192,43 @@ public class Taxi {
         setStartInfo(startInfo);
     }
 
-    public synchronized void accomplishRide(Ride ride) {
-        available = false;
-
-        Position startingPosition = ride.getStartingPosition();
-        double kms = position.distanceFrom(startingPosition);
-        consumeBatteryLevel(kms);
-        position = startingPosition;
+    public synchronized void accomplishRide(RideRequest rideRequest) {
+        setAvailable(false);
 
         try {
             System.out.println(this +
-                    "\nAccomplishing " + ride);
+                    "\nAccomplishing " + rideRequest);
             Thread.sleep(RIDE_TIME);
             System.out.println("Ride accomplished.");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        kms = ride.getDistance();
+        Position startingPosition = rideRequest.getStartingPosition();
+        Position destinationPosition = rideRequest.getDestinationPosition();
+
+        double kms = position.distanceFrom(startingPosition) + rideRequest.getDistance();
         consumeBatteryLevel(kms);
 
-        position = ride.getDestinationPosition();
-        int startDistrict = ride.getStartingPosition().getDistrict();
-        int destinationDistrict = position.getDistrict();
+        position = destinationPosition;
+        System.out.println(this);
+
+        int startDistrict = startingPosition.getDistrict();
+        int destinationDistrict = destinationPosition.getDistrict();
         if (startDistrict != destinationDistrict) {
             mqttClient.unsubscribe();
-            ridesQueue.clear();
             mqttClient.subscribe(destinationDistrict);
         }
 
-        System.out.println(this);
-        available = true;
+        setAvailable(true);
+    }
+
+    public synchronized void tryToRecharge() {
+        setAvailable(false);
+        rechargeClient.recharge();
     }
 
     public synchronized void recharge() {
-        available = false;
-
         Position rechargingStation = SmartCityUtils.getRechargingStation(position.getDistrict());
         double kms = position.distanceFrom(rechargingStation);
         consumeBatteryLevel(kms);
@@ -217,7 +244,9 @@ public class Taxi {
 
         batteryLevel = 100;
         System.out.println(this);
-        available = true;
+
+        rechargeClient.stopRecharging();
+        setAvailable(true);
     }
 
     public synchronized void quit() {

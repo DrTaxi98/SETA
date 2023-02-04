@@ -14,15 +14,18 @@ public class RidesConsumer extends Thread {
 
     public void run() {
         while (!shutdownRequested) {
-            consume(ridesQueue.take());
+            RideRequest rideRequest = ridesQueue.take();
+            if (rideRequest != null)
+                consume(rideRequest);
         }
     }
 
-    public void consume(Ride ride) {
-        taxi.getRideElection(ride).startElection();
+    public void consume(RideRequest rideRequest) {
+        taxi.getRideElection(rideRequest).startElection();
     }
 
     public void shutdown() {
         shutdownRequested = true;
+        ridesQueue.shutdown();
     }
 }

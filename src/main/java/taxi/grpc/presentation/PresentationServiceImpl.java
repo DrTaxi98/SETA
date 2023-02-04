@@ -4,6 +4,7 @@ import beans.Position;
 import beans.TaxiBean;
 import com.seta.taxi.PresentationServiceGrpc.*;
 import com.seta.taxi.PresentationServiceOuterClass.*;
+import debug.Debug;
 import io.grpc.stub.StreamObserver;
 import taxi.model.Taxi;
 
@@ -21,20 +22,20 @@ public class PresentationServiceImpl extends PresentationServiceImplBase {
         String ipAddress = request.getIpAddress();
         int portNumber = request.getPortNumber();
         TaxiBean otherTaxi = new TaxiBean(id, ipAddress, portNumber);
-        System.out.println("A taxi presented itself: " + otherTaxi);
+        System.out.println("[Taxi " + taxi.getId() + "] A taxi presented itself: " + otherTaxi);
 
-        int x = request.getPosition().getX();
-        int y = request.getPosition().getY();
-        Position position = new Position(x, y);
+        Position position = new Position(request.getPosition());
         System.out.println("\t" + position);
 
         boolean result = taxi.addOtherTaxi(otherTaxi);
         if (result)
-            System.out.println("Taxi " + id + " added.");
+            System.out.println("[Taxi " + taxi.getId() + "] Taxi " + id + " added.");
         else
-            System.out.println("Taxi " + id + " is already present.");
+            System.out.println("[Taxi " + taxi.getId() + "] Taxi " + id + " is already present.");
 
         System.out.println(taxi.getOtherTaxisSet());
+
+        Debug.sleep();
 
         TaxiResponse response = TaxiResponse.newBuilder()
                 .setId(taxi.getId())
@@ -48,15 +49,17 @@ public class PresentationServiceImpl extends PresentationServiceImplBase {
     @Override
     public void notifyQuit(TaxiId request, StreamObserver<TaxiResponse> responseObserver) {
         int id = request.getId();
-        System.out.println("Taxi " + id + " is leaving the system.");
+        System.out.println("[Taxi " + taxi.getId() + "] Taxi " + id + " is leaving the system.");
 
         boolean result = taxi.removeOtherTaxi(id);
         if (result)
-            System.out.println("Taxi " + id + " removed.");
+            System.out.println("[Taxi " + taxi.getId() + "] Taxi " + id + " removed.");
         else
-            System.out.println("Taxi " + id + " does not exist.");
+            System.out.println("[Taxi " + taxi.getId() + "] Taxi " + id + " does not exist.");
 
         System.out.println(taxi.getOtherTaxisSet());
+
+        Debug.sleep();
 
         TaxiResponse response = TaxiResponse.newBuilder()
                 .setId(taxi.getId())

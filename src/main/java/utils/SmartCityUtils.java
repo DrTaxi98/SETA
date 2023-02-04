@@ -1,7 +1,7 @@
 package utils;
 
 import beans.Position;
-import taxi.model.Ride;
+import taxi.model.RideRequest;
 
 import java.util.Arrays;
 import java.util.List;
@@ -45,7 +45,7 @@ public class SmartCityUtils {
         return new Position(x, y);
     }
 
-    public static Ride randomRide(int id) {
+    public static RideRequest randomRide(int id) {
         Position startingPosition = randomPosition();
         Position destinationPosition;
 
@@ -53,7 +53,7 @@ public class SmartCityUtils {
             destinationPosition = randomPosition();
         } while (startingPosition.equals(destinationPosition));
 
-        return new Ride(id, startingPosition, destinationPosition);
+        return new RideRequest(id, startingPosition, destinationPosition);
     }
 
     public static int getDistrict(int x, int y) {
