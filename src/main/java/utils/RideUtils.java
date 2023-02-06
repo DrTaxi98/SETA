@@ -27,7 +27,7 @@ public class RideUtils {
         if (inRideDistrict && available)
             taxi.accomplishRide(rideRequest);
         else if (taxi.getStatus() == Taxi.Status.ELECTING)
-            taxi.setStatusAvailable();
+            taxi.setStatus(Taxi.Status.AVAILABLE);
     }
 
     public static String toString(Election election) {
