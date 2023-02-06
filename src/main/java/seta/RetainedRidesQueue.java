@@ -12,6 +12,7 @@ public class RetainedRidesQueue {
     private final List<RideRequest> retainedRides = new ArrayList<>();
 
     private synchronized List<RideRequest> getRetainedRides() {
+        Debug.sleep();
         return new ArrayList<>(retainedRides);
     }
 
@@ -22,12 +23,13 @@ public class RetainedRidesQueue {
 
     public RideRequest getFirst() {
         List<RideRequest> rides = getRetainedRides();
-        if (rides.isEmpty())
+        if (!rides.isEmpty())
             return rides.get(0);
         return null;
     }
 
     public synchronized boolean remove(RideRequest rideRequest) {
+        Debug.sleep();
         return retainedRides.remove(rideRequest);
     }
 

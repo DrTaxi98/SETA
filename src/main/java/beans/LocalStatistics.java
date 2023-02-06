@@ -112,8 +112,8 @@ public class LocalStatistics implements Comparable<LocalStatistics> {
         return "Local statistics:" +
                 "\n\tTaxi ID = " + taxiId +
                 "\n\tTimestamp = " + timestamp +
-                "\n\tBattery level = " + batteryLevel +
-                "\n\tTravelled kilometres = " + travelledKms +
+                "\n\tBattery level = " + batteryLevel + '%' +
+                "\n\tTravelled kilometres = " + travelledKms + " km" +
                 "\n\tAccomplished rides = " + accomplishedRides +
                 "\n\tPollution averages = " + pollutionAverages;
     }

@@ -63,8 +63,8 @@ public class RideCriteria implements Comparable<RideCriteria> {
     @Override
     public String toString() {
         return "Ride criteria:" +
-                "\n\tDistance = " + distance +
-                "\n\tBatteryLevel = " + batteryLevel +
+                "\n\tDistance = " + distance + " km" +
+                "\n\tBatteryLevel = " + batteryLevel + '%' +
                 "\n\tTaxi ID = " + taxiId;
     }
 }

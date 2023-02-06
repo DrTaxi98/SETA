@@ -67,7 +67,7 @@ public class Taxi {
         this.portNumber = portNumber;
         restClient = new TaxiRestClient(administratorServerAddress);
         batteryLevel = 100;
-        offset = new Random().nextLong();
+        offset = new Random().nextInt();
     }
 
     public Status getStatus() {
@@ -109,8 +109,10 @@ public class Taxi {
 
     private void travelKms(double kms) {
         statisticsComputer.addTravelledKms(kms);
-        batteryLevel = (int) Math.max(batteryLevel - kms, 0);
-        if (batteryLevel < 30)
+        batteryLevel = Math.max(batteryLevel - (int) kms, 0);
+        System.out.println(this);
+
+        if (batteryLevel < 30 && status != Status.RECHARGING)
             tryToRecharge();
     }
 
@@ -263,6 +265,10 @@ public class Taxi {
     public synchronized void accomplishRide(RideRequest rideRequest) {
         status = Status.RIDING;
 
+        Position startingPosition = rideRequest.getStartingPosition();
+        Position destinationPosition = rideRequest.getDestinationPosition();
+        double distanceFromStart = position.distanceFrom(startingPosition);
+
         try {
             System.out.println(this +
                     "\nAccomplishing " + rideRequest);
@@ -272,11 +278,7 @@ public class Taxi {
             e.printStackTrace();
         }
 
-        Position startingPosition = rideRequest.getStartingPosition();
-        Position destinationPosition = rideRequest.getDestinationPosition();
-
         position = destinationPosition;
-        System.out.println(this);
 
         int startDistrict = startingPosition.getDistrict();
         int destinationDistrict = destinationPosition.getDistrict();
@@ -288,7 +290,7 @@ public class Taxi {
         statisticsComputer.incrementAccomplishedRides();
         publishAccomplished(rideRequest);
         setStatusAvailable();
-        travelKms(position.distanceFrom(startingPosition) + rideRequest.getDistance());
+        travelKms(distanceFromStart + rideRequest.getDistance());
     }
 
     public synchronized void tryToRecharge() {
@@ -299,8 +301,8 @@ public class Taxi {
     public synchronized void recharge() {
         status = Status.RECHARGING;
         Position rechargingStation = SmartCityUtils.getRechargingStation(position.getDistrict());
-        travelKms(position.distanceFrom(rechargingStation));
         position = rechargingStation;
+        travelKms(position.distanceFrom(rechargingStation));
 
         try {
             System.out.println("Recharging " + this);

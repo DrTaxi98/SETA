@@ -5,6 +5,8 @@ import beans.TaxiBean;
 import com.seta.taxi.RechargeServiceGrpc;
 import com.seta.taxi.RechargeServiceGrpc.*;
 import com.seta.taxi.RechargeServiceOuterClass.*;
+import debug.Debug;
+import io.grpc.Context;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
@@ -85,31 +87,41 @@ public class RechargeClient {
         System.out.println("[Taxi " + taxi.getId() + "] Sending LAMPORT message to Taxi " + nextTaxi.getId() + ':' +
                 '\n' + RechargeUtils.toStringLamport(request));
 
-        stub.lamport(request, new StreamObserver<Timestamp>() {
-
-            @Override
-            public void onNext(Timestamp timestamp) {
-                long thisTimestamp = taxi.getTimestamp();
-                long otherTimestamp = timestamp.getTimestamp();
-                System.out.println("[Taxi " + taxi.getId() + "] Taxi " + nextTaxi.getId() + " answered.");
-                taxi.adjustTimestamp(thisTimestamp, otherTimestamp);
-            }
-
-            public void onError(Throwable throwable) {
-                System.out.println("[Taxi " + taxi.getId() + "] Error! " + throwable.getMessage());
-                GrpcUtils.handleInactiveTaxi(taxi, nextTaxi.getId());
-                channel.shutdownNow();
-            }
-
-            public void onCompleted() {
-                channel.shutdownNow();
-            }
-        });
+        Context newContext = Context.current().fork();
+        Context originalContext = newContext.attach();
 
         try {
-            channel.awaitTermination(20, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            Debug.sleep();
+
+            stub.lamport(request, new StreamObserver<Timestamp>() {
+
+                @Override
+                public void onNext(Timestamp timestamp) {
+                    long thisTimestamp = taxi.getTimestamp();
+                    long otherTimestamp = timestamp.getTimestamp();
+                    System.out.println("[Taxi " + taxi.getId() + "] Taxi " + nextTaxi.getId() + " answered.");
+                    taxi.adjustTimestamp(thisTimestamp, otherTimestamp);
+                }
+
+                public void onError(Throwable throwable) {
+                    System.out.println("[Taxi " + taxi.getId() + "] Error! " + throwable.getMessage());
+                    GrpcUtils.handleInactiveTaxi(taxi, nextTaxi.getId());
+                    lamport(startTaxiId);
+                    channel.shutdownNow();
+                }
+
+                public void onCompleted() {
+                    channel.shutdownNow();
+                }
+            });
+
+            try {
+                channel.awaitTermination(20L * taxi.getOtherTaxisSet().getOtherTaxis().size(), TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        } finally {
+            newContext.detach(originalContext);
         }
     }
 }

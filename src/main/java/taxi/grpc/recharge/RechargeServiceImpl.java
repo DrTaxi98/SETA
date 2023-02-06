@@ -2,6 +2,7 @@ package taxi.grpc.recharge;
 
 import com.seta.taxi.RechargeServiceGrpc.*;
 import com.seta.taxi.RechargeServiceOuterClass.*;
+import debug.Debug;
 import io.grpc.stub.StreamObserver;
 import taxi.model.Taxi;
 import utils.RechargeUtils;
@@ -21,6 +22,8 @@ public class RechargeServiceImpl extends RechargeServiceImplBase {
 
         int district = request.getDistrict();
         int otherTaxiId = request.getTaxiId();
+
+        Debug.sleep();
 
         Taxi.Status status = taxi.getStatus();
         if (taxi.getDistrict() != district ||
@@ -59,6 +62,8 @@ public class RechargeServiceImpl extends RechargeServiceImplBase {
 
         taxi.adjustTimestamp(thisTimestamp, otherTimestamp);
         taxi.lamport(startTaxiId);
+
+        Debug.sleep();
 
         long timestamp = taxi.getTimestamp();
         Timestamp response = Timestamp.newBuilder()
