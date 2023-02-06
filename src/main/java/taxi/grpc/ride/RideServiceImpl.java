@@ -86,7 +86,7 @@ public class RideServiceImpl extends RideServiceImplBase {
                 !taxi.isPresentRideElection(rideRequest)) {
             System.out.println("[Taxi " + taxi.getId() + "]" + "Taxi " + electedTaxiId + " is no longer present.");
             if (taxi.getStatus() == Taxi.Status.ELECTING)
-                taxi.setStatusAvailable();
+                taxi.setStatus(Taxi.Status.AVAILABLE);
         }
         else {
             RideElection rideElection = taxi.getRideElection(rideRequest);
@@ -94,7 +94,7 @@ public class RideServiceImpl extends RideServiceImplBase {
                 rideElection.forwardElected(request);
                 taxi.removeRideElection(rideElection);
                 if (taxi.getStatus() == Taxi.Status.ELECTING)
-                    taxi.setStatusAvailable();
+                    taxi.setStatus(Taxi.Status.AVAILABLE);
             } else
                 RideUtils.electionMaster(taxi, rideElection);
         }
