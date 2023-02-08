@@ -21,13 +21,11 @@ public class RideUtils {
 
         int district = taxi.getDistrict();
         boolean inRideDistrict = taxi.isInDistrict(rideRequest);
-        boolean available = taxi.getStatus() == Taxi.Status.ELECTING;
+        boolean available = taxi.getStatus() == Taxi.Status.AVAILABLE;
         printDistrictAndAvailability(taxi, district, inRideDistrict, available);
 
         if (inRideDistrict && available)
             taxi.accomplishRide(rideRequest);
-        else if (taxi.getStatus() == Taxi.Status.ELECTING)
-            taxi.setStatus(Taxi.Status.AVAILABLE);
     }
 
     public static String toString(Election election) {

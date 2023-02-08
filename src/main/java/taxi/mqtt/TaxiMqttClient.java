@@ -12,7 +12,7 @@ public class TaxiMqttClient {
     private static final String SUB_TOPIC_PREFIX = "seta/smartcity/rides/district";
     private static final int SUB_QOS = 2;
     private static final String PUB_ACCOMPLISHED_TOPIC = "seta/smartcity/rides/accomplished";
-    private static final String PUB_AVAILABILE_TOPIC = "seta/smartcity/taxis/available";
+    private static final String PUB_AVAILABLE_TOPIC = "seta/smartcity/taxis/available";
     private static final int PUB_QOS = 2;
 
     private MqttClient client;
@@ -81,7 +81,7 @@ public class TaxiMqttClient {
         MqttMessage message = new MqttMessage(payload.getBytes());
 
         System.out.println("Publishing availability in district: " + district);
-        MqttUtils.publish(client, message, PUB_AVAILABILE_TOPIC, PUB_QOS);
+        MqttUtils.publish(client, message, PUB_AVAILABLE_TOPIC, PUB_QOS);
     }
 
     public void disconnect() {

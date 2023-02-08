@@ -17,7 +17,7 @@ public class Seta {
     private static final String PUB_TOPIC_PREFIX = "seta/smartcity/rides/district";
     private static final int PUB_QOS = 2;
     private static final String SUB_ACCOMPLISHED_TOPIC = "seta/smartcity/rides/accomplished";
-    private static final String SUB_AVAILABILE_TOPIC = "seta/smartcity/taxis/available";
+    private static final String SUB_AVAILABLE_TOPIC = "seta/smartcity/taxis/available";
     private static final int SUB_QOS = 2;
     private static int RIDE_ID = 0;
     private static final Gson gson = new Gson();
@@ -74,7 +74,7 @@ public class Seta {
                 retainedRides.put(i + 1, new RetainedRidesQueue());
 
             MqttUtils.subscribe(client, SUB_ACCOMPLISHED_TOPIC, SUB_QOS);
-            MqttUtils.subscribe(client, SUB_AVAILABILE_TOPIC, SUB_QOS);
+            MqttUtils.subscribe(client, SUB_AVAILABLE_TOPIC, SUB_QOS);
 
             while (client.isConnected()) {
                 for (int i = 0; i < 2; i++)
